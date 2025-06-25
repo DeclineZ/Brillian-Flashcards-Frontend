@@ -65,7 +65,7 @@ export default function DeckDetail() {
           : {
               ...d,
               learned: 0,               
-              due:     d.cards.length   /
+              due:     d.cards.length  
             }
       )
     )
