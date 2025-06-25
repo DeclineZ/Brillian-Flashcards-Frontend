@@ -21,6 +21,21 @@ ChartJS.register(
   Legend
 );
 
+const learningStats = [
+  { label: 'Total Flash Card', value: '1245', bg: 'bg-gray-50', text: 'gray-600' },
+  { label: 'Learned Flashcard', value: '40', bg: 'bg-blue-50', text: 'blue-600' },
+  { label: 'Quiz Passed', value: '79', bg: 'bg-green-50', text: 'green-600' },
+  { label: 'Study Time', value: '16h', bg: 'bg-indigo-50', text: 'indigo-600' },
+  { label: 'Streak Days', value: '7', bg: 'bg-orange-50', text: 'orange-600' }
+];
+
+const learningStylesRaw = [
+  { color: "bg-red-500", label: "Visual", value: 100 },
+  { color: "bg-blue-500", label: "Verbal", value: 300},
+  { color: "bg-yellow-500", label: "Logical", value:100 },
+  { color: "bg-green-500", label: "RealWorld", value: 110 },
+];
+
 const ProfilePage = () => {
   // User and ranking data
   const [user] = useState({
@@ -32,67 +47,71 @@ const ProfilePage = () => {
   });
   
 
-
-
-  // Learning Style chart
-  // const SpiderWebDiagram = ({ learnerType }) => {
-  //   const data = {
-  //     labels: ["Visual", "Real-World", "Logical", "Verbal"],
-  //     datasets: [{
-  //       label: "Learning Style",
-  //       data: learnerType,
-  //       backgroundColor: "rgba(99, 102, 241, 0.2)",
-  //       borderColor: "rgba(99, 102, 241, 1)",
-  //       borderWidth: 2,
-  //     }],
-  //   };
-  //   const options = {
-  //     scales: { r: { min: 0, max: 100, ticks: { stepSize: 20, callback: v => `${v}%` }, pointLabels: { font: { size: 14 } }, grid: { color: '#e5e7eb' }, angleLines: { color: '#d1d5db' } } },
-  //     plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.formattedValue}%` } } },
-  //     maintainAspectRatio: false,
-  //   };
-  //   return <div className="w-full h-full"><Radar data={data} options={options} /></div>;
-  // };
-  //style
-
- 
-  
-
   const LearningStyleBar = () => {
-    const learningStylesRaw = [
-      { color: "bg-red-500", label: "Visual", value: 90 },
-      { color: "bg-blue-500", label: "Verbal", value: 30},
-      { color: "bg-yellow-500", label: "Logical", value: 9 },
-      { color: "bg-green-500", label: "Real-World", value: 30 },
-    ];
+  const MIN_LABEL_WIDTH = 19; // Minimum width % to show label
+  const barRef = useRef(null);
 
-    const MIN_LABEL_WIDTH = 17; // Minimum width % to show label
-    const barRef = useRef(null);
+  // Normalize to make total 100%
+  const total = learningStylesRaw.reduce((acc, s) => acc + s.value, 0);
+  const learningStyles = learningStylesRaw.map((s) => ({
+    ...s,
+    normalizedValue: (s.value / total) * 100,
+  }));
 
-    // Normalize to make total 100%
-    const total = learningStylesRaw.reduce((acc, s) => acc + s.value, 0);
-    const learningStyles = learningStylesRaw.map((s) => ({
-      ...s,
-      normalizedValue: (s.value / total) * 100,
-    }));
+  return (
+    <div>
+      {/* Bar */}
+      <div
+        ref={barRef}
+        className="flex w-full h-8 rounded-full overflow-hidden bg-gray-200 relative"
+      >
+        {learningStyles.map((style, index) => (
+          <div
+            key={index}
+            className={`${style.color} h-full relative text-white text-x flex items-center justify-center`}
+            style={{ width: `${style.normalizedValue}%` }}
+          >
+            {style.normalizedValue >= MIN_LABEL_WIDTH && <span>{style.label}</span>}
+          </div>
+        ))}
+      </div>
 
+      {/* Legend */}
+      <div className="flex text-gray-800 flex-wrap mt-2 space-x-4">
+        {learningStyles.map((style, index) =>
+          style.normalizedValue < MIN_LABEL_WIDTH && (
+            <div key={index} className="flex items-center space-x-2">
+              <span className={`w-4 h-4 rounded ${style.color}`}></span>
+              <span className="text-sm">{style.label}</span>
+            </div>
+          )
+        )}
+      </div>
+
+    </div>
+  );
+};
+
+
+  const LearningStats = () => {
     return (
-        <div
-          ref={barRef}
-          className="flex w-full h-8 rounded-full overflow-hidden bg-gray-200 relative"
-        >
-          {learningStyles.map((style, index) => (
+      <div className="bg-white text-gray-900 rounded-3xl p-6 shadow-lg">
+        <h3 className="text-2xl font-semibold mb-4">Learning Dashboard</h3>
+        <div className="grid grid-cols-2 gap-4">
+          {learningStats.map((stat, i) => (
             <div
-              key={index}
-              className={`${style.color} h-full relative text-white text-x flex items-center justify-center`}
-              style={{ width: `${style.normalizedValue}%` }}
+              key={i}
+              className={`text-center p-4 rounded-xl ${stat.bg}`}
             >
-              {style.normalizedValue >= MIN_LABEL_WIDTH && <span>{style.label}</span>}
+              <div className={`text-2xl font-bold text-${stat.text}`}>{stat.value}</div>
+              <div className={`text-sm text-${stat.text}`}>{stat.label}</div>
             </div>
           ))}
         </div>
+      </div>
     );
   };
+
   // Badge component
   const Badge = ({ badgeName, progress }) => (
     <div className="flex flex-col items-center gap-2">
@@ -151,9 +170,7 @@ const ProfilePage = () => {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* activity */}
-        <div className="col-span-1 bg-white rounded-lg shadow p-6 h-[400px]">
-            
-        </div>
+        <LearningStats/>
         <div className="col-span-1 flex flex-col h-[400px]"> 
           {/* Learning Style */}
           <div className="col-span-2 bg-white rounded-lg shadow p-6 flex-1 ">
