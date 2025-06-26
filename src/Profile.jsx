@@ -95,8 +95,7 @@ const ProfilePage = () => {
 
   const LearningStats = () => {
     return (
-      <div className="bg-white text-gray-900 rounded-3xl p-6 shadow-lg">
-        <h3 className="text-2xl font-semibold mb-4">Learning Dashboard</h3>
+      
         <div className="grid grid-cols-2 gap-4">
           {learningStats.map((stat, i) => (
             <div
@@ -108,7 +107,6 @@ const ProfilePage = () => {
             </div>
           ))}
         </div>
-      </div>
     );
   };
 
@@ -136,60 +134,72 @@ const ProfilePage = () => {
       <Badge badgeName="Speed Solver" progress={55} />
       <Badge badgeName="Knowledge Sharer" progress={85} />
       <Badge badgeName="Early Bird" progress={75} />
+      <Badge badgeName="Early Bird" progress={75} />
+      <Badge badgeName="Early Bird" progress={75} />
+      <Badge badgeName="Early Bird" progress={75} />
     </div>
   );
 
   return (
-    <div className="w-full max-w-full sm:max-w-full lg:max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-6 space-y-6">
-      {/* Profile Header */}
-      <div className="flex items-center bg-white p-6 rounded-lg shadow">
-        <img src={profile} alt="User" className="w-20 h-20 rounded-full object-cover" />
-        <div className="ml-6 flex-1">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
-            <Award size={24} className="text-indigo-600" />
-            <BadgePlus size={24} className="text-gray-400" />
-            <BadgeCheck size={24} className="text-yellow-500" />
-          </div>
-          <div className="flex items-center space-x-4 mt-2">
-            <span className="text-gray-600">Level {user.level}</span>
-            <div className="flex items-center text-gray-600">
-              <Flame size={20} className="text-red-500 mr-1" />
-              Streak: {user.streak} days
-            </div>
-          </div>
-        </div>
-        <div className="w-1/4">
-          <div className="bg-gray-200 h-2 rounded-full overflow-hidden">
-            <div className="bg-indigo-600 h-2" style={{ width: `${user.progress}%` }} />
-          </div>
-          <p className="text-right text-gray-600 mt-1">{user.progress}% Complete</p>
-        </div>
+   <div className="h-screen w-full max-w-full mx-auto px-2 sm:px-4 lg:px-6 py-6 flex flex-col bg-gray-50">
+  {/* Profile Header */}
+  <div className="flex-none flex items-center bg-white p-6 rounded-lg shadow">
+    <img src={profile} alt="User" className="w-20 h-20 rounded-full object-cover" />
+    <div className="ml-6 flex-1">
+      <div className="flex items-center space-x-2">
+        <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
+        <Award size={24} className="text-indigo-600" />
+        <BadgePlus size={24} className="text-gray-400" />
+        <BadgeCheck size={24} className="text-yellow-500" />
       </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* activity */}
-        <LearningStats/>
-        <div className="col-span-1 flex flex-col h-[400px]"> 
-          {/* Learning Style */}
-          <div className="col-span-2 bg-white rounded-lg shadow p-6 flex-1 ">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">My Learning Style</h2>
-            <LearningStyleBar/>
-          </div>
-
-          {/* Badges */}
-          <div className="col-span-2 bg-white rounded-lg shadow p-6 flex-1 mt-4 ">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Badges</h2>
-            <div className="flex-1  overflow-auto">
-              <BadgeSection />
-            </div>
-          </div>
-          
+      <div className="flex items-center space-x-4 mt-2">
+        <span className="text-gray-600">Level {user.level}</span>
+        <div className="flex items-center text-gray-600">
+          <Flame size={20} className="text-red-500 mr-1" />
+          Streak: {user.streak} days
         </div>
-        
       </div>
     </div>
+    <div className="w-1/4">
+      <div className="bg-gray-200 h-2 rounded-full overflow-hidden">
+        <div className="bg-indigo-600 h-2" style={{ width: `${user.progress}%` }} />
+      </div>
+      <p className="text-right text-gray-600 mt-1">{user.progress}% Complete</p>
+    </div>
+  </div>
+
+  {/* Main Grid */}
+  <div className="flex-1 mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+    {/* Learning Dashboard */}
+    <div className="bg-white text-gray-900 rounded-lg p-6 shadow overflow-auto">
+      <h3 className="text-2xl font-semibold mb-4">Learning Dashboard</h3>
+      <LearningStats />
+    </div>
+
+    {/* Right Column */}
+    <div className="flex flex-col gap-4 min-h-0">
+      {/* Learning Style */}
+      <div className="bg-white rounded-lg shadow p-6 h-[150px]">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-4">My Learning Style</h2>
+        <LearningStyleBar />
+      </div>
+
+      {/* Badges Section - scrollable */}
+      <div className="flex-1 bg-white rounded-lg shadow p-0 overflow-hidden min-h-0">
+        {/* Sticky Header */}
+        <div className="p-6 border-b sticky top-0 bg-white z-10 rounded-t-lg">
+          <h2 className="text-2xl font-semibold text-gray-900">Badges</h2>
+        </div>
+
+        {/* Scrollable BadgeSection */}
+        <div className="overflow-auto p-6 space-y-4 h-full">
+          <BadgeSection />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
   );
 };
 
