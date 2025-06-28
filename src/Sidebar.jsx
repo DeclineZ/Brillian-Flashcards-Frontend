@@ -8,7 +8,7 @@ import profile from './assets/profile.png';
 import { useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
-  const { decks } = useDecks();  
+  const { decks, userXP, level, progress } = useDecks(); 
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -106,11 +106,11 @@ export default function Sidebar() {
             <p className="font-medium text-black">NSC2025</p>
             <p className="flex items-center gap-1 text-black">
               <Flame size={12} className="text-orange-500 streak-icon" />
-              69
+              7 Days
             </p>
-            <p className="text-black">Level 4</p>
+            <p className="text-black">Level {level}</p>
             <div className="h-1 w-24 bg-gray-200 rounded mt-1">
-              <div className="h-full w-3/4 bg-blue-600 rounded" />
+              <div className="h-full w-3/4 bg-blue-600 rounded " style={{ width: `${progress}%` }} />
             </div>
           </div>
         )}

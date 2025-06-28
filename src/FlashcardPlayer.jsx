@@ -1,11 +1,12 @@
 // src/pages/FlashcardPlayer.jsx
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Lightbulb, ChevronLeft, X, Heart, ThumbsUp, Clock } from 'lucide-react';
 import { useDecks } from './lib/DeckContext.jsx';
 import confetti from 'canvas-confetti';
 import { withTimeout } from './lib/aiTimeout.js';
+import { calculateNext } from './lib/sm2.js';
 
 export default function FlashcardPlayer() {
   const { decks, setDecks } = useDecks();
@@ -35,14 +36,32 @@ export default function FlashcardPlayer() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
 
-  const deck = decks.find((d) => String(d.id) === id);
-  const card = deck.cards[index];
+  const deck = decks.find(d => String(d.id) === id);
+  const [sessionCards] = useState(() => {
+    const now   = Date.now();
+    return deck.cards.filter(c => new Date(c.nextReview).getTime() <= now);
+  });
 
-  const [userXP, setUserXP] = useState(0); 
+  const cards = sessionCards;
+  const totalDue  = cards.length           
+  const cardsLeft = totalDue - index        
+  const card  = cards[index];
+
+  
+
+  const { userXP, setUserXP }     = useDecks();
   const [xpMessage, setXpMessage] = useState(''); 
   const [showXpMessage, setShowXpMessage] = useState(false); 
 
   const [sessionStudied, setSessionStudied] = useState(0)
+
+  const { learningPrefs, setLearningPrefs } = useDecks();
+
+  const [appliedLikes, setAppliedLikes]   = useState(() => new Set());
+  const [styleMessage, setStyleMessage]   = useState('');
+  const [showStyleMessage, setShowStyleMessage] = useState(false);
+  const prevIndexRef = useRef(index);
+
 
   const calculateXP = (isCorrect, timeTaken, isFaster) => {
     let xp = 10; 
@@ -67,7 +86,66 @@ export default function FlashcardPlayer() {
   };
   
 
+useEffect(() => {
+    const prevIdx = prevIndexRef.current;
+    if (prevIdx !== index) {
+      const prevCard = deck.cards[prevIdx];
+      if (
+        prevCard &&
+        liked.has(prevCard.id) &&
+        !appliedLikes.has(prevCard.id)
+      ) {
+        const delta = 0.05;
+        const p     = { ...learningPrefs };
+        const text  = (prevCard.answer || '').toLowerCase();
 
+        const realWorldKW = ['for example','e.g.','เช่น','ตัวอย่าง','อาทิ'];
+        const logicalKW   = ['because','therefore','เพราะ','ดังนั้น','เนื่องจาก'];
+        const verbalKW    = ['definition','summary','step','explain','คำจำกัดความ','สรุป','ขั้นตอน','อธิบาย'];
+
+        if (prevCard.needs_image)               p.visual    += delta;
+        if (realWorldKW.some(kw => text.includes(kw)))    p.realworld += delta;
+        if (logicalKW.some(kw   => text.includes(kw)))    p.logical   += delta;
+        if (verbalKW.some(kw    => text.includes(kw)))    p.verbal    += delta;
+        if (
+          !prevCard.needs_image &&
+          !realWorldKW.some(kw => text.includes(kw)) &&
+          !logicalKW.some(kw  => text.includes(kw)) &&
+          !verbalKW.some(kw   => text.includes(kw))
+        ) {
+          p.verbal += delta;
+        }
+
+        const sum = Object.values(p).reduce((a,b)=>a+b,0) || 1;
+        Object.keys(p).forEach(k => p[k] = p[k] / sum);
+        setLearningPrefs(p);
+
+        const primary =
+          prevCard.needs_image               ? 'Visual' :
+          realWorldKW.some(kw => text.includes(kw)) ? 'Real-World' :
+          logicalKW.some(kw => text.includes(kw))   ? 'Logical' : 'Verbal';
+        const STYLE_DELAY = 1000; // ms
+   setTimeout(() => {
+     setStyleMessage(`+${Math.round(delta*100)}% ${primary}`);
+     setShowStyleMessage(true);
+     setTimeout(() => setShowStyleMessage(false), 2000);
+   }, STYLE_DELAY);
+
+        setAppliedLikes(s => new Set(s).add(prevCard.id));
+      }
+    }
+    prevIndexRef.current = index;
+  }, [
+    index,
+    liked,
+    appliedLikes,
+    learningPrefs,
+    deck.cards,
+    setLearningPrefs,
+    setAppliedLikes,
+    setStyleMessage,
+    setShowStyleMessage
+  ]);
   
 useEffect(() => {
   if (!isFinished) return;
@@ -89,13 +167,14 @@ useEffect(() => {
   setIsTimerRunning(true); 
 }, [index]);
 
-useEffect(() => {
-  const storedTime = localStorage.getItem(`card-${card.id}-time`);
-  if (storedTime) {
-    setCardElapsedTime(storedTime);
-  }
-}, [card.id]);
-  
+  useEffect(() => {
+    if (!card) return;               
+    const storedTime = localStorage.getItem(`card-${card.id}-time`);
+    if (storedTime) {
+      setCardElapsedTime(storedTime);
+    }
+  }, [card]);    
+
   useEffect(() => {
     const timer = setInterval(() => {
       setSessionTime(prev => prev + 1);
@@ -104,17 +183,16 @@ useEffect(() => {
   }, []);
 
   
-  if (!deck || !deck.cards?.length) {
+  if (index >= cards.length || cards.length === 0) {
     return (
-      <div className="p-8">
-        <button onClick={() => navigate(-1)} className="text-blue-600">
-          ← Back
+      <div className="p-4 h-full w-full text-black flex items-center justify-center flex-col">
+        <h2 className="text-2xl mb-4">🎉 All done for now!</h2>
+        <button onClick={() => navigate(-1)} className="btn text-blue-700">
+          Back to Deck
         </button>
-        <p className="mt-4 text-lg font-semibold">Deck not found.</p>
       </div>
     );
   }
-
  
 
   const getTaxonomyColorClass = (taxonomy) => {
@@ -137,7 +215,6 @@ useEffect(() => {
       const timeTaken = (Date.now() - cardStartTime) / 1000; 
       setCardElapsedTime(timeTaken);
   
-      // Save the fastest time to localStorage
       const previousTime = localStorage.getItem(`card-${card.id}-time`);
       if (!previousTime || timeTaken < previousTime) {
         localStorage.setItem(`card-${card.id}-time`, timeTaken.toFixed(2));
@@ -148,12 +225,22 @@ useEffect(() => {
   }
 
   function toggleLike(id) {
-     setLiked(prev => {
-       const next = new Set(prev);
-        next.has(id) ? next.delete(id) : next.add(id);
-         return next;
-         });
-        }
+  setLiked(prevLiked => {
+    const nextLiked = new Set(prevLiked);
+    if (nextLiked.has(id)) {
+      nextLiked.delete(id);
+      setAppliedLikes(prev => {
+        const nextApplied = new Set(prev);
+        nextApplied.delete(id);
+        return nextApplied;
+      });
+    } else {
+      nextLiked.add(id);
+    }
+    return nextLiked;
+  });
+}
+
 
   async function handleAiExplanation() {
     setLoadingAi(true);
@@ -188,7 +275,7 @@ useEffect(() => {
   }
 
   function handleNext() {
-    if (index < deck.cards.length - 1) {
+    if (index < cards.length - 1) {
       setIndex(index + 1);
       setShowAnswer(false);
       setDrawer(false);
@@ -198,7 +285,7 @@ useEffect(() => {
 
   }
 
- function rate(isCorrect) {
+ async function rate(isCorrect) {
   const timeTaken   = (Date.now() - cardStartTime) / 1000;
   const previousTime = localStorage.getItem(`card-${card.id}-time`);
   const isFaster     = previousTime ? timeTaken < previousTime : false;
@@ -210,11 +297,11 @@ useEffect(() => {
   setTimeout(() => setShowXpMessage(false), 2000);
 
   const quality = isCorrect ? 5 : 1;
-  const updated = sm2({ ...card }, quality);
+  const { repetition, interval, efactor, nextReview } =
+    calculateNext(card, quality);
 
   const previousPoint = card.point;
-  let newPoint = updated.point + (isCorrect ? 6 : -2);
-  updated.point = newPoint;
+  const newPoint = previousPoint + (isCorrect ? 6 : -2);
 
   const justLearned = previousPoint <= 5 && newPoint > 5;
   if (justLearned) {
@@ -225,72 +312,37 @@ useEffect(() => {
   setDecks(prev =>
     prev.map(d => {
       if (d.id !== deck.id) return d;
-
-      let cards = [...d.cards];
-      if (newPoint < 3) {
-        // Hard → to back
-        cards.splice(index, 1);
-        cards.push(updated);
-      } else {
-        // Not-hard → in place
-        cards[index] = updated;
-      }
-
-      const learned = justLearned ? d.learned + 1 : d.learned;
-      const due     = justLearned ? Math.max(0, d.due - 1) : d.due;
-
-      return { ...d, cards, learned, due };
+      return {
+        ...d,
+        cards: d.cards.map(c =>
+          c.id === card.id ? {
+          ...c,
+          point:       newPoint,
+          repetition,
+          interval,
+          efactor,
+          nextReview,
+        } : c
+        ),
+        due: d.cards
+          .map(c =>
+            c.id === card.id
+              ? { ...c, nextReview }
+              : c
+          )
+          .filter(c => c.nextReview <= Date.now())
+          .length,
+        learned: justLearned ? d.learned + 1 : d.learned,
+      };
     })
   );
 
+
   setShowAnswer(false);
   setAiExplanation('');
-  if (newPoint < 3) {
-    if (index >= deck.cards.length - 1) {
-      navigate(`/deck/${deck.id}`);
-    }
-  } else {
-    handleNext();
-  }
+  handleNext();
 }
 
-  
-  function sm2(card, quality) {
-    const c = { ...card };
-  
-    if (quality < 3) {
-      c.repetitions = 0;
-      c.interval = 1;
-    } else {
-      if (c.repetitions === 0) c.interval = 1;
-      else if (c.repetitions === 1) c.interval = 6;
-      else c.interval = Math.round(c.interval * c.ef);
-  
-      c.repetitions += 1;
-  
-      const efPrime =
-        c.ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-      c.ef = Math.max(1.3, efPrime);
-    }
-  
-    const nextDueTimestamp = Date.now() + c.interval * 864e5;
-  
-    if (isNaN(nextDueTimestamp)) {
-      console.error("Invalid due timestamp:", nextDueTimestamp);
-      return c; 
-    }
-  
-    const nextDueDate = new Date(nextDueTimestamp);
-  
-    if (isNaN(nextDueDate.getTime())) {
-      console.error("Invalid date:", nextDueDate);
-      return c; 
-    }
-  
-    c.due = nextDueDate.toISOString().slice(0, 10);
-  
-    return c;
-  }
   
 
   async function openAddMore() {
@@ -343,6 +395,7 @@ useEffect(() => {
   }
 
 
+  
   return (
     
     <div className="flex flex-col items-center min-h-screen bg-gray-50 w-full relative">
@@ -372,7 +425,7 @@ useEffect(() => {
           Exit
         </button>
         <span className="text-sm text-gray-700 ">
-  Card {index + 1} / {deck.cards.length} | Elapsed Time: {sessionTime} sec
+  {cardsLeft} Cards left today| Elapsed Time: {sessionTime} sec
 </span>
       </header>
 
@@ -383,6 +436,8 @@ useEffect(() => {
     {xpMessage}
   </div>
 )}
+
+{showStyleMessage && <div className="style-message">{styleMessage}</div>}
 
       <span className="text-xl text-gray-700 flex justify-center gap-2 font-bold">
         <Clock size={26}/>

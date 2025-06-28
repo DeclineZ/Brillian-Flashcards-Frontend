@@ -153,11 +153,11 @@ export default function FlashcardsTab() {
         keyword:  '',        
         needs_image: !!newImgUrl,
         image:    newImgUrl,
-        point:     0,
-        repetitions: 0,
-        interval:  0,
         ef:        2.5,
-        due:       new Date().toISOString().slice(0,10),
+        repetition:  0,              
+        interval:    0,        
+        efactor:     2.5,            
+        nextReview:  Date.now(),   
         taxonomy: 'Manual'
       }
       const updated = decks.map(d =>
@@ -250,12 +250,26 @@ export default function FlashcardsTab() {
 
         <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2">
         {deck.cards.map(card => {
+          const nowMs        = Date.now();
+          const nextReviewMs = new Date(card.nextReview).getTime();
+          const isDue        = nextReviewMs <= nowMs;
+          let   timeLabel    = '';
+          if (!isDue) {
+            const diff      = nextReviewMs - nowMs;
+            const days      = Math.floor(diff / (1000*60*60*24));
+            const hours     = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+            timeLabel       = days > 0
+                             ? `${days} day${days>1?'s':''}`
+                             : `${hours} hour${hours!==1?'s':''}`;
+         }
   const isEditing = editingId === card.id;
   return (
     <div
-      key={card.id}
-      className="bg-white rounded shadow p-4 border border-gray-200 relative"
-    >
+          key={card.id}
+          className={`bg-white rounded shadow p-4 border border-gray-200 relative ${
+            !isDue ? 'opacity-50' : ''
+          }`}
+        >
       
       {/* edit/save icon */}
       <button
@@ -346,6 +360,12 @@ export default function FlashcardsTab() {
        </p>
      </div>
    </div>
+   {/* if not due, show time until next review */}
+      {!isDue && (
+        <p className="text-xs italic text-gray-500 mt-2">
+          Next review in {timeLabel}
+        </p>
+      )}
  </>
       )}
     </div>

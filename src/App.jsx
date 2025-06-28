@@ -16,10 +16,7 @@ import LearnerTypePage from './LearnerTypePage.jsx';
 
 import Profile from './Profile.jsx'
 
-
-
-
-
+import QuizPlayer from './QuizPlayer.jsx';
 
 function App() {
   const { decks } = useDecks();
@@ -37,6 +34,7 @@ function App() {
           <Route path="/deck/:id/play" element={<FlashcardPlayer />} />
           <Route path="/LTP" element={<LearnerTypePage />} />
           <Route path="/Profile" element={<Profile />} />
+          <Route path="/deck/:id/quiz/:idx" element={<QuizPlayer />} />
         </Routes>
       </main>
     </div>

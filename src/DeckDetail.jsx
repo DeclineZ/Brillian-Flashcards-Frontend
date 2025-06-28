@@ -1,7 +1,7 @@
 // src/pages/DeckDetail.jsx
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext.jsx';
-import { BarChart, Settings, Play, Share2, BookOpen, List, Pencil, Check, PlusCircle, Plus, Trash2, ListIcon} from 'lucide-react';
+import { BarChart, Settings, Play,Layers,  Share2, BookOpen, List, Pencil, Check, PlusCircle, Plus, Trash2, ListIcon, NotebookText} from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { v4 as uuid } from 'uuid'
 import StatsPopup from './StatsPopup';
@@ -10,24 +10,25 @@ import SummaryTab     from './SummaryTab'
 import FlashcardsTab  from './FlashcardsTab'
 import QuizTab        from './QuizTab'
 
+import openDiagramInNewTab from './lib/openDiagram';
+
 export default function DeckDetail() {
   const [viewMode,       setViewMode]       = useState('summary');
+  const [pulse, setPulse] = useState(false);
   const [showPopUp, setShowPopUp] = useState(false);
   
   
-  const [taxonomyCounts, setTaxonomyCounts] = useState({
-      Remembering: 0,
-      Understanding: 0,
-      Applying: 0,
-    });
+  
+  const [taxonomyCounts, setTaxonomyCounts] = useState({});
+  const [quizCount,       setQuizCount]       = useState(0);
 
   const handlePopUpAction = (action) => {
-    if (action === 'play') {
-      navigate(`/deck/${deck.id}/play`);
+    if (action === 'quiz') {
+      navigate(`/deck/${deck.id}/quiz/0`);
     } else if (action === 'summary') {
       setViewMode('summary');
     } else if (action === 'cards') {
-      setViewMode('cards');
+      navigate(`/deck/${deck.id}/play`);
     }
     setShowPopUp(false);
   };
@@ -50,7 +51,7 @@ export default function DeckDetail() {
         d.id === deck.id
           ? {
               ...d,
-              cards: d.cards.map(card => ({ ...card, point: 0 }))  // Reset points to 0
+              cards: d.cards.map(card => ({ ...card, point: 0 }))  
             }
           : d
       )
@@ -58,19 +59,24 @@ export default function DeckDetail() {
   }
 
   const handlePlay = () => {
-        setDecks(prev =>
-      prev.map(d =>
-        d.id !== deck.id
-          ? d
-          : {
-              ...d,
-              learned: 0,               
-              due:     d.cards.length   /
-            }
-      )
-    )
-    navigate(`/deck/${deck.id}/play`)
+  if (viewMode === 'summary') {
+  const svg = document.querySelector('.mermaid svg');
+  if (svg) openDiagramInNewTab(svg);
+  else alert('ยังไม่มีไดอะแกรมที่ถูกเรนเดอร์บนหน้านี้');
+
+  }  else if (viewMode === 'cards') {
+    const now = Date.now();
+    const dueCount = deck.cards.filter(
+      c => new Date(c.nextReview).getTime() <= now
+    ).length;
+    if (dueCount === 0) {
+      return alert('No cards due for review right now. Come back tomorrow!');
+    }
+    navigate(`/deck/${deck.id}/play`);
+  } else if (viewMode === 'quiz') {
+    navigate(`/deck/${deck.id}/quiz/0`);
   }
+};
 
   const [newQ, setNewQ]           = useState('')
   const [newA, setNewA]           = useState('')
@@ -97,7 +103,7 @@ export default function DeckDetail() {
         id:       uuid(),
         question: newQ.trim(),
         answer:   newA.trim(),
-        keyword:  '',       
+        keyword:  '',          
         needs_image: !!newImgUrl,
         image:    newImgUrl,
         point:     0,
@@ -122,6 +128,28 @@ export default function DeckDetail() {
     function copyLink() {
     navigator.clipboard.writeText(shareLink);
     alert('Link copied to clipboard!');
+  }
+
+  function resetDueDates() {
+    const nowISO = new Date().toISOString();
+    const updatedDecks = decks.map(d =>
+      d.id !== deck.id
+        ? d
+        : {
+            ...d,
+            cards: d.cards.map(card => ({
+              ...card,
+              nextReview: nowISO,
+              repetition: 0,
+              interval:   0,
+              efactor:    2.5,
+            })),
+            due: d.cards.length, 
+          }
+    );
+    setDecks(updatedDecks);
+    localStorage.setItem('decks', JSON.stringify(updatedDecks));
+    setShowSettings(false);
   }
 
   function handleDeleteDeck() {
@@ -157,28 +185,54 @@ export default function DeckDetail() {
     setShowSettings(false);
   }
 
+  useEffect(() => {
+  setPulse(true);                
+  const t = setTimeout(() => setPulse(false), 2000); 
+  return () => clearTimeout(t);
+}, [viewMode]);               
+
+useEffect(() => {
+  if (!deck) return;                  
+
+  const counts = deck.cards.reduce((acc, c) => {
+    const lvl = c.taxonomy || 'Uncategorised';
+    acc[lvl]  = (acc[lvl] || 0) + 1;
+    return acc;
+  }, {});
+  setTaxonomyCounts(counts);
+
+  setQuizCount(deck.quiz?.length ?? 0);
+
+  const seenKey = `deck-${deck.id}-overviewSeen`;
+  if (!localStorage.getItem(seenKey)) {
+    setShowPopUp(true);
+    localStorage.setItem(seenKey, 'true');
+  }
+}, [deck]);
+
+
   return (
     <div className="p-6 md:p-10 min-h-full bg-blue-50 w-full relative flex flex-col ">
        {showPopUp && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow-xl text-black space-y-4 max-w-sm w-full">
-            <h2 className="text-xl font-bold">Congrats, New Deck Created!</h2>
-            <p className="text-sm text-gray-600">
-              A total of <strong>{deck.cards.length}</strong> flashcards were created. Here's the breakdown by Bloom's Taxonomy:
-            </p>
-            <ul className="space-y-2 text-sm">
-              <li>Remembering: {taxonomyCounts.Remembering}</li>
-              <li>Understanding: {taxonomyCounts.Understanding}</li>
-              <li>Applying: {taxonomyCounts.Applying}</li>
-            </ul>
+           <h2 className="text-xl font-bold">🎉 Deck ready!</h2>
+ <p className="text-sm text-gray-600 mb-2">
+   <strong>{deck.cards.length}</strong> flashcards &nbsp;|&nbsp;
+   <strong>{quizCount}</strong> quiz&nbsp;questions
+ </p>
+
+ <p className="text-sm text-gray-600">Bloom's-taxonomy spread:</p>
+ <ul className="space-y-1 text-sm ml-2 list-disc">
+   {Object.entries(taxonomyCounts).map(([lvl, n]) => (
+     <li key={lvl}>
+       {lvl}: {n}
+     </li>
+   ))}
+ </ul>
 
             <div className="flex justify-between gap-4 mt-4">
-              <button
-                onClick={() => handlePopUpAction('play')}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Play
-              </button>
+              
               <button
                 onClick={() => handlePopUpAction('summary')}
                 className="w-full px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
@@ -187,9 +241,15 @@ export default function DeckDetail() {
               </button>
               <button
                 onClick={() => handlePopUpAction('cards')}
-                className="w-full px-4 py-2 bg-gray-200 text-black rounded hover:bg-gray-300"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Preview
+                Flashcards
+              </button>
+              <button
+                onClick={() => handlePopUpAction('quiz')}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Quiz
               </button>
             </div>
           </div>
@@ -207,12 +267,10 @@ export default function DeckDetail() {
      />
    </>
  )}
-      {/* Deck header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2 text-black">
             {deck.name} ({deck.total}) 
-            {/* Share Button */}
             <button
               className="text-base text-gray-600 hover:text-black transition"
               onClick={handleShareClick}
@@ -223,12 +281,10 @@ export default function DeckDetail() {
           <p className="text-gray-600 mt-1">{deck.description}</p>
         </div>
 
-        {/* Top-right icons */}
         <div className="flex items-center gap-4 text-gray-600">
           <button className="p-2 hover:bg-gray-400/70 rounded transition bg-gray-200" onClick={() => setShowStats(true)}>
             <BarChart size={20} />
           </button>
-          {/* Settings Button */}
           <button
             className="p-2 hover:bg-gray-400/70 rounded transition bg-gray-200"
             onClick={() => setShowSettings(!showSettings)}
@@ -236,13 +292,19 @@ export default function DeckDetail() {
             <Settings size={20} />
           </button>
 <button
-  className="p-3 rounded-md bg-blue-500 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-all duration-300 hover:scale-110 animated-gradient2"
-  onClick={() => {
-    resetPoints();
-    handlePlay();
-  }}
+  key={viewMode}                     
+   className={`play-button ${pulse ? 'heartbeat' : ''}
+              p-3 rounded-md text-white shadow-md
+              focus:outline-none
+              focus:ring-2 focus:ring-blue-400 transition hover:scale-110 animated-gradient`}
+  onClick={handlePlay}
+  title="Start this mode"
 >
-  <Play size={24} fill="currentColor" />
+  {{
+    summary:   <NotebookText size={20}/>,
+    cards:     <Layers        size={20}/>,
+    quiz:      <Play          size={20}/>
+  }[viewMode]}
 </button>
         </div>
         
@@ -257,6 +319,7 @@ export default function DeckDetail() {
             }`}
             onClick={() => setViewMode('summary')}
           >
+            <NotebookText size={16} className="inline-block mr-1" />
             Summary
           </button>
           <button
@@ -267,7 +330,7 @@ export default function DeckDetail() {
             }`}
             onClick={() => setViewMode('cards')}
           >
-            <BookOpen size={16} className="inline-block mr-1" />
+            <Layers size={16} className="inline-block mr-1" />
             Flashcards
           </button>
           <button
@@ -278,19 +341,17 @@ export default function DeckDetail() {
             }`}
             onClick={() => setViewMode('quiz')}
           >
-            <ListIcon size={16} className="inline-block mr-1" />
+            <Play size={16} className="inline-block mr-1" />
             SmartQuiz
           </button>
         </nav>
       </div>
 
-      {/* Card list */}
       
       {viewMode === 'summary' && <SummaryTab />}
       {viewMode === 'cards'   && <FlashcardsTab />}
       {viewMode === 'quiz'    && <QuizTab />}
 
-      {/* Share link pop-up overlay */}
       {showSharePopup && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded shadow-xl text-black space-y-4 max-w-sm w-full">
@@ -322,7 +383,6 @@ export default function DeckDetail() {
         </div>
       )}
 
-      {/* Settings modal overlay */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-xl text-black space-y-4 max-w-sm w-full">
@@ -346,6 +406,12 @@ export default function DeckDetail() {
               >
                 Delete Deck
               </button>
+              <button
+          onClick={resetDueDates}
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Reset Due Dates
+        </button>
             </div>
             <button
               onClick={() => setShowSettings(false)}

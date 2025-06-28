@@ -25,7 +25,7 @@ function ModeButton({ children, icon, active, onClick, ...rest }) {
 export default function CreateFlashcards() {
 
   const navigate = useNavigate();
-  const { setDecks } = useDecks();
+  const { setDecks, learningPrefs } = useDecks();
   const [loading, setLoading] = useState(false);
 
   const [mode, setMode] = useState('ai'); 
@@ -42,11 +42,24 @@ export default function CreateFlashcards() {
     handleFiles(e.dataTransfer.files);
   };
 
+  const [activeTab, setActiveTab] = useState('summary');
+  const [summary, setSummary] = useState('');
+  const blankQuiz = { question: '', answer: '', key_points: [] };
+  const [quizzes, setQuizzes]   = useState([{ ...blankQuiz }]);
+
+  
+  const updateQuiz = (idx, field, value) =>
+    setQuizzes(qs => qs.map((q,i) => i===idx ? { ...q, [field]: value } : q));
+
+  const addQuiz    = () => setQuizzes(qs => [...qs, { ...blankQuiz }]);
+  const removeQuiz = (idx) => setQuizzes(qs => qs.filter((_,i)=>i!==idx));
+
   const generateFromPdf = async () => {
     if (!files.length) return alert('Please choose a PDF first');
     setLoading(true);
     const formData = new FormData();
     formData.append('pdf', files[0]);
+    formData.append('learningPrefs', JSON.stringify(learningPrefs));
     
     try {
     const { data: newDeck } = await withTimeout(
@@ -414,7 +427,17 @@ export default function CreateFlashcards() {
 ]
         }
       );
-      setDecks((prev) => [...prev, newDeck]);
+      const sm2Defaults = {
+     repetition: 0,
+     interval:   0,
+     efactor:    2.5,
+     nextReview: Date.now(),
+   };
+   const deckWithSm2 = {
+     ...newDeck,
+     cards: newDeck.cards.map(c => ({ ...sm2Defaults, ...c })),
+   };
+   setDecks(prev => [...prev, deckWithSm2]);
       navigate(`/deck/${newDeck.id}`);
     } catch (err) {
       console.error(err);
@@ -449,45 +472,87 @@ export default function CreateFlashcards() {
     );
   };
 
-  const saveManualDeck = () => {
-    if (!deckName.trim()) return alert('Deck name required');
-    if (!cards.length || cards.some((c) => !c.question.trim() || !c.answer.trim()))
-      return alert('Fill in all cards');
+ const saveManualDeck = () => {
+  if (!deckName.trim()) {
+    alert('Deck name required');
+    return;
+  }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const transformedCards = cards.map((c) => {
-         const hasImg = !!c.image;
-         return {
-           id: uuid(),
-           question: c.question.trim(),
-           answer: c.answer.trim(),
-           keyword: c.keyword,
-           needs_image: hasImg,         
-           image: hasImg ? c.image : '', 
-           taxonomy: c.taxonomy || "Manual",
-           point: 0,
-           repetitions: 0,
-           interval: 1,
-           ef: 2.5,
-           due: today,
-         };
-       });
+  const summaryOk = summary.trim() !== '';
 
-    const newDeck = {
-      id: uuid(),
-      name: deckName.trim(),
-      description: deckDescription.trim(),
-      studied: false,
-      total: transformedCards.length,
-      learned: 0,
-      due: transformedCards.length,
-      summaryHtml: '',
-      cards: transformedCards,
-    };
+  const cardsOk =
+    cards.length > 0 &&
+    cards.every((c) => c.question.trim() && c.answer.trim());
 
-    setDecks((prev) => [...prev, newDeck]);
-    navigate(`/deck/${newDeck.id}`);
+  const quizOk =
+    quizzes.length > 0 &&
+    quizzes.every((q) => q.question.trim() && q.answer.trim());
+
+  if (!summaryOk && !cardsOk && !quizOk) {
+    alert('Please add a summary, some flashcards, or quiz questions.');
+    return;
+  }
+
+  if (!cardsOk && cards.length) {
+    alert('Fill in all flashcards or remove the incomplete ones.');
+    return;
+  }
+
+  if (!quizOk && quizzes.length) {
+    alert('Fill in all quiz questions or remove the incomplete ones.');
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const transformedCards = cardsOk
+    ? cards.map((c) => {
+        const hasImg = !!c.image;
+        return {
+          id: uuid(),
+          question: c.question.trim(),
+          answer: c.answer.trim(),
+          keyword: c.keyword,
+          needs_image: hasImg,
+          image: hasImg ? c.image : '',
+          taxonomy: c.taxonomy || 'Manual',
+          repetition:  0,          
+          interval:    0,           
+          efactor:     2.5,        
+          nextReview:  Date.now(),  
+        };
+      })
+    : [];
+
+  const transformedQuiz = quizOk
+    ? quizzes.map((q) => ({
+        question: q.question.trim(),
+        answer: q.answer.trim(),
+        key_points: q.key_points?.length ? q.key_points : [],
+      }))
+    : [];
+
+  const emojis = ['📚', '🧠', '🎯', '⚡', '🚀', '🌟', '🔑', '💡', '📝', '🧩'];
+  const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+  const newDeck = {
+    id: uuid(),
+    name: `${emoji} ${deckName.trim()}`,
+    description: deckDescription.trim(),
+    studied: false,
+    total: transformedCards.length,
+    learned: 0,
+    due: transformedCards.length,
+    summaryHtml: summary.trim().replace(/\n/g, '<br/>'),
+    cards: transformedCards,
+    quiz: transformedQuiz,
   };
+
+  setDecks((prev) => [...prev, newDeck]);
+  navigate(`/deck/${newDeck.id}`);
+};
+
+
 
   if (loading) {
     return (
@@ -577,8 +642,38 @@ export default function CreateFlashcards() {
             />
           </div>
 
-          {/* Cards list */}
-          <div className="space-y-4 max-h-70 overflow-auto pr-2">
+    <nav className="flex gap-4 text-sm font-medium border-b mb-2">
+      {['summary','cards','quiz'].map(t => (
+        <button
+          key={t}
+          onClick={()=>setActiveTab(t)}
+          className={`
+            pb-2
+            ${activeTab===t
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'}
+          `}
+        >
+          {t==='summary' ? 'Summary'
+           : t==='cards' ? 'Flashcards'
+           :              'Quiz'}
+        </button>
+      ))}
+    </nav>
+
+    {activeTab==='summary' && (
+      <textarea
+        rows={6}
+        placeholder="Write a concise summary here…"
+        className="w-full px-3 py-2 border rounded text-black"
+        value={summary}
+        onChange={e=>setSummary(e.target.value)}
+      />
+    )}
+
+          {activeTab==='cards' && (
+            <>
+          <div className="space-y-4 max-h-65 overflow-auto pr-2">
             {cards.map((card, idx) => (
               <div key={idx} className="relative space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="text-sm font-medium text-gray-500 mb-1">
@@ -605,11 +700,10 @@ export default function CreateFlashcards() {
                   value={card.answer}
                   onChange={(e) => updateCard(idx, 'answer', e.target.value)}
                 />
-                {/* image picker */}
+  
 <div className="space-y-1">
   <label className="block text-sm font-medium text-gray-700">Image (optional)</label>
 
-  {/* styled trigger */}
   <label
     htmlFor={`img-${idx}`}
     className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 cursor-pointer"
@@ -618,7 +712,6 @@ export default function CreateFlashcards() {
     {card.image ? 'Change image' : 'Add image'}
   </label>
 
-  {/* hidden native input */}
   <input
     id={`img-${idx}`}
     type="file"
@@ -627,7 +720,7 @@ export default function CreateFlashcards() {
     onChange={(e) => handleImage(idx, e.target.files[0])}
   />
 
-  {/* tiny preview */}
+
   {card.image && (
     <img
       src={card.image}
@@ -638,7 +731,7 @@ export default function CreateFlashcards() {
 </div>
               </div>
             ))}
-            {/* add card */}
+
             <button
               onClick={addCard}
               className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-3 text-gray-600 transition hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600"
@@ -647,14 +740,60 @@ export default function CreateFlashcards() {
               Add card
             </button>
           </div>
+          </>
+    )}
 
-          <button
-            onClick={saveManualDeck}
-            className="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 disabled:opacity-50"
-            disabled={!deckName.trim() || cards.length === 0}
-          >
-            Save deck
-          </button>
+
+    {activeTab==='quiz' && (
+      <div className="space-y-4 max-h-65 overflow-auto pr-2">
+        {quizzes.map((q,idx)=>(
+          <div key={idx} className="relative space-y-3 rounded-xl border bg-white p-5 shadow-sm">
+            <div className="text-sm font-medium text-gray-500 mb-1">Question {idx+1}</div>
+            <button
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+              onClick={()=>removeQuiz(idx)}
+              title="Delete question"
+            ><Trash2 size={18}/></button>
+
+            <label className="block text-sm font-medium text-gray-700">Question</label>
+            <textarea
+              rows={1}
+              className="w-full px-3 py-2 border rounded text-black"
+              value={q.question}
+              onChange={e=>updateQuiz(idx,'question',e.target.value)}
+            />
+            <label className="block text-sm font-medium text-gray-700">Ideal answer</label>
+            <textarea
+              rows={2}
+              className="w-full px-3 py-2 border rounded text-black"
+              value={q.answer}
+              onChange={e=>updateQuiz(idx,'answer',e.target.value)}
+            />
+          </div>
+        ))}
+
+        <button
+          onClick={addQuiz}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed
+                     border-gray-300 py-3 text-gray-600 transition hover:border-blue-500
+                     hover:bg-blue-50 hover:text-blue-600"
+        >
+          <Plus size={18}/> Add question
+        </button>
+      </div>
+    )}
+
+    <button
+      onClick={saveManualDeck}
+      className="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700
+                 disabled:opacity-50"
+      disabled={
+        !deckName.trim() ||
+        (summary.trim()==='' && cards.length===0 && quizzes.length===0)
+      }
+    >
+      Save deck
+    </button>
         </div>
       )}
     </div>

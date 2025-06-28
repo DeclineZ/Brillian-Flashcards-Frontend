@@ -111,7 +111,7 @@
   color: #777;
 }
 
-.xp-message {
+.xp-message, .style-message {
   position: absolute;
   top: 10%;
   left: 50%;
@@ -123,6 +123,8 @@
   z-index: 9999;
   animation: xpMoveUp 2s ease-out forwards;
 }
+
+.style-message { color: #10b981; }
 
 @keyframes xpMoveUp {
   0% {
@@ -335,5 +337,16 @@
   background: linear-gradient(45deg, #1f2bda, #4b61ef, #62a9ff, #abddf4);
   background-size: 400% 400%;
   animation: gradientAnimation 3.5s ease infinite;
+}
+
+@keyframes heartbeat {
+  0%   { box-shadow: 0 0 0 0 rgba(31, 132, 255, 0.8); }
+  40%  { box-shadow: 0 0 0 6px rgba(64, 86, 209, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(113, 144, 247, 0); }
+}
+
+/* utility: pulse once in 0.6 s */
+.heartbeat {
+  animation: heartbeat 2s ease-out;
 }
 
