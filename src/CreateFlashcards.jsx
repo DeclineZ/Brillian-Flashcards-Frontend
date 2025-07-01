@@ -24,6 +24,8 @@ function ModeButton({ children, icon, active, onClick, ...rest }) {
 
 export default function CreateFlashcards() {
 
+  const BASE = 'https://brillian-flashcard-backend.onrender.com';
+
   const navigate = useNavigate();
   const { setDecks, learningPrefs } = useDecks();
   const [loading, setLoading] = useState(false);
@@ -63,7 +65,7 @@ export default function CreateFlashcards() {
     
     try {
     const { data: newDeck } = await withTimeout(
-        axios.post('https://brillian-flashcard-backend.onrender.com/api/generate-deck', formData),
+        axios.post(`${BASE}/api/generate-deck`, formData),
         1200_000,
         {
           id: 'mock-deck',

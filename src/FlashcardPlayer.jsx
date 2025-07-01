@@ -34,6 +34,7 @@ export default function FlashcardPlayer() {
   const [cardStartTime, setCardStartTime] = useState(0);
   const [cardElapsedTime, setCardElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const BASE = import.meta.env.VITE_API_URL;
 
 
   const deck = decks.find(d => String(d.id) === id);
@@ -246,7 +247,7 @@ useEffect(() => {
     setLoadingAi(true);
     try {
       const { data } = await withTimeout(
-              axios.post('https://brillian-flashcard-backend.onrender.com/api/explanation', { question: card.question, answer: card.answer }),
+              axios.post(`${BASE}/api/explanation`, { question: card.question, answer: card.answer }),
               20_000,
               { explanation: 'หินอัคนีพุ คือ หินที่เกิดจากการเย็นตัวและแข็งตัวของแมกมาใต้ผิวโลก โดยแมกมาเหล่านี้ถูกขับพุ่งออกมาจากใต้พื้นโลกผ่านกระบวนการภูเขาไฟระเบิด หรือการปะทุของภูเขาไฟ เมื่อแมกมาเหล่านี้สัมผัสกับอากาศหรือน้ำ อุณหภูมิและความดันที่ลดลงทำให้แร่ธาตุต่างๆ ในแมกมาเริ่มแข็งตัวและตกผลึก กลายเป็นหินอัคนีพุที่มีเนื้อละเอียดและโครงสร้างที่มีลักษณะเฉพาะ หินบะซอลต์ หินไรโอไลต์ และหินแอนดีไซต์ เป็นตัวอย่างของหินอัคนีพุที่พบได้ทั่วไป หินเหล่านี้มีลักษณะเนื้อละเอียดและมักจะมีสีเข้ม หินบะซอลต์มักพบในบริเวณที่มีการปะทุของภูเขาไฟใต้มหาสมุทร หินไรโอไลต์และหินแอนดีไซต์มักพบในบริเวณที่มีภูเขาไฟบนพื้นทวีป การเกิดของหินเหล่านี้จึงเกี่ยวข้องกับกระบวนการเคลื่อนที่ของแผ่นธรณีภาคและกระบวนการภูเขาไฟ ซึ่งทำให้เราเข้าใจถึงการเปลี่ยนแปลงของพื้นโลกและประวัติศาสตร์ของโลกเราได้ดีขึ้น' }
             );
@@ -350,7 +351,7 @@ useEffect(() => {
     setMoreOpen(true);
     try {
       const { data } = await withTimeout(
-              axios.post('https://brillian-flashcard-backend.onrender.com/api/related-cards', { question: card.question, answer: card.answer }),
+              axios.post(`${BASE}/api/related-cards`, { question: card.question, answer: card.answer }),
               2500_000,
               { cards: [
                   { id:'mock1', question:'หินแอนดีไซต์มีลักษณะอย่างไร', answer:'เป็นหินอัคนีพุที่มีเนื้อละเอียดและสีเข้ม', keyword:'', needs_image:false },

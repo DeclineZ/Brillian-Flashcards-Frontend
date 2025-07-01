@@ -27,6 +27,7 @@ export default function QuizPlayer() {
   const { userXP, setUserXP }             = useDecks();
 
   const feedbackRef = useRef(null);
+  const BASE = import.meta.env.VITE_API_URL;
 
   
 
@@ -81,7 +82,7 @@ export default function QuizPlayer() {
    studentAnswer: answer
  };
  try {
-      const r = await fetch('https://brillian-flashcard-backend.onrender.com/api/grade', {
+      const r = await fetch(`${BASE}/api/grade`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload)
