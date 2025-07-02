@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { useDecks } from './lib/DeckContext.jsx';
 
-import DeckDetail from './DeckDetail.jsx'
+// import DeckDetail from './DeckDetail.jsx'
+import Deckdetail from './Deckdetail/DeckDetail.jsx';
 
 import FlashcardPlayer from './FlashcardPlayer';
 
@@ -33,7 +34,7 @@ function App() {
           <Route path="/" element={<FlashcardDeckTable decks={decks}/>} />
           <Route path="/create" element={<CreateFlashcards />} />
           <Route path="/learntogether" element={<CommunityPage />} />
-          <Route path="/deck/:id" element={<DeckDetail />} />
+          <Route path="/deck/:id" element={<Deckdetail />} />
           <Route path="/deck/:id/play" element={<FlashcardPlayer />} />
           <Route path="/LTP" element={<LearnerTypePage />} />
           <Route path="/Profile" element={<Profile />} />
