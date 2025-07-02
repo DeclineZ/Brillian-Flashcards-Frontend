@@ -50,11 +50,11 @@ export default function FlashcardPlayer() {
 
   
 
-  const { setUserXP }     = useDecks();
+  const { userXP, setUserXP }     = useDecks();
   const [xpMessage, setXpMessage] = useState(''); 
   const [showXpMessage, setShowXpMessage] = useState(false); 
 
-  const [setSessionStudied] = useState(0)
+  const [sessionStudied, setSessionStudied] = useState(0)
 
   const { learningPrefs, setLearningPrefs } = useDecks();
 

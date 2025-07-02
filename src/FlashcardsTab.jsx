@@ -26,8 +26,8 @@ export default function FlashcardsTab() {
   const [newFileObj, setNewFileObj] = useState(null)
   const [newImgUrl, setNewImgUrl] = useState('')
 
-  const [setShowPopUp] = useState(false);
-  const [setTaxonomyCounts] = useState({
+  const [showPopUp, setShowPopUp] = useState(false);
+  const [taxonomyCounts, setTaxonomyCounts] = useState({
     Remembering: 0,
     Understanding: 0,
     Applying: 0,

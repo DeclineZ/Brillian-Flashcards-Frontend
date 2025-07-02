@@ -30,8 +30,9 @@ const learningStats = [
   { label: 'Streak Days', value: '7', bg: 'bg-orange-50', text: 'orange-600' }
 ];
 
+
 const ProfilePage = () => {
-  const { learningPrefs, level, progress } = useDecks();
+  const { learningPrefs, userXP, level, progress } = useDecks();
   // User and ranking data
   const [user] = useState({
     name: "NSC2025",

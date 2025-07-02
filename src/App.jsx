@@ -1,24 +1,21 @@
+import { Suspense, lazy } from 'react';
+
 import './App.css'
-import Sidebar from './Sidebar.jsx';
-import FlashcardDeckTable from './FlashcardDeckTable.jsx'
-import CreateFlashcards from './CreateFlashcards.jsx';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import { useDecks } from './lib/DeckContext.jsx';
+import { useDecks }            from './lib/DeckContext.jsx';
 
-import DeckDetail from './DeckDetail.jsx'
+const Sidebar            = lazy(() => import('./Sidebar.jsx'));
+const FlashcardDeckTable = lazy(() => import('./FlashcardDeckTable.jsx'));
+const CreateFlashcards    = lazy(() => import('./CreateFlashcards.jsx'));
+const DeckDetail          = lazy(() => import('./DeckDetail.jsx'));
+const FlashcardPlayer     = lazy(() => import('./FlashcardPlayer.jsx'));
+const CommunityPage       = lazy(() => import('./CommunityPage.jsx'));
+const LearnerTypePage     = lazy(() => import('./LearnerTypePage.jsx'));
+const Profile             = lazy(() => import('./Profile.jsx'));
+const QuizPlayer          = lazy(() => import('./QuizPlayer.jsx'));
 
-import FlashcardPlayer from './FlashcardPlayer';
 
-import CommunityPage from './CommunityPage.jsx';
-
-import LearnerTypePage from './LearnerTypePage.jsx';
-
-import Profile from './Profile.jsx'
-
-import QuizPlayer from './QuizPlayer.jsx';
-
-import { Suspense } from 'react';
 
 function App() {
   const { decks } = useDecks();

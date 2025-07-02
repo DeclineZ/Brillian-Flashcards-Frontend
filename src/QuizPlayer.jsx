@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext';
 import { ArrowLeft, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
@@ -11,17 +11,16 @@ export default function QuizPlayer() {
   const { decks }   = useDecks();
   const deck        = decks.find(d => String(d.id) === id);
 
-  /* ---------- local state ---------- */
   const [answer, setAnswer] = useState('');
   const [result, setResult] = useState(null);
-  const [seconds, setSeconds] = useState(0);     // ⏲️ stopwatch
-  const [qSeconds, setQSeconds]    = useState(0);   // ⏲️ per-question
+  const [seconds, setSeconds] = useState(0);   
+  const [qSeconds, setQSeconds]    = useState(0); 
   const textareaRef = useRef(null);
 
   const [loadingEval, setLoadingEval] = useState(false);
   const [showXpMessage, setShowXpMessage] = useState(false);
   const [xpMessage,     setXpMessage]     = useState('');
-  const { setUserXP }             = useDecks();
+  const { userXP, setUserXP }             = useDecks();
 
   const feedbackRef = useRef(null);
   const BASE = import.meta.env.VITE_API_URL;

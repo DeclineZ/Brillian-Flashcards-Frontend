@@ -73,7 +73,7 @@ export default function LearnerTypePage() {
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {learnerTypes.map(({ id, label, desc, color }) => (
+          {learnerTypes.map(({ id, label, desc, Icon, color }) => (
             <button
               key={id}
               onClick={() => choose(id)}
