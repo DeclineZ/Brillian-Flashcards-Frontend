@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext';
-import { ChevronDown, ChevronRight, Play, CornerDownRight, PencilLine, Check, X, Lightbulb, Timer } from 'lucide-react';
+import { ChevronDown, ChevronRight, CornerDownRight, PencilLine, Check, X, Lightbulb, Timer } from 'lucide-react';
 
 export default function QuizTab() {
   const { id }       = useParams();          

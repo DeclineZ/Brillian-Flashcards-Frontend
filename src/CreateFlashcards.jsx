@@ -24,7 +24,7 @@ function ModeButton({ children, icon, active, onClick, ...rest }) {
 
 export default function CreateFlashcards() {
 
-  const BASE = 'https://brillian-flashcard-backend.onrender.com';
+  const BASE = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
   const { setDecks, learningPrefs } = useDecks();
@@ -505,7 +505,6 @@ export default function CreateFlashcards() {
     return;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
 
   const transformedCards = cardsOk
     ? cards.map((c) => {

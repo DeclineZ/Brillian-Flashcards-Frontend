@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext';
 import mermaid from 'mermaid';
@@ -8,6 +8,9 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'strict',
+  flowchart: {
+    htmlLabels: true
+  },
   themeVariables: {
     fontSize: '20px',
   },
@@ -99,7 +102,7 @@ export default function SummaryTab() {
       <div
         ref={containerRef}
         className="prose max-w-none text-black"
-        dangerouslySetInnerHTML={{ __html: deck.summaryHtml }}
+        dangerouslySetInnerHTML={{ __html: deck.summaryHtml.replace(/ \u0E32/g, '\u0E33').normalize('NFC') }}
       />
     </div>
   );

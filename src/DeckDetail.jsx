@@ -2,8 +2,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext.jsx';
 import { BarChart, Settings, Play,Layers,  Share2, BookOpen, List, Pencil, Check, PlusCircle, Plus, Trash2, ListIcon, NotebookText} from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { v4 as uuid } from 'uuid'
+import { useState, useEffect } from 'react';
 import StatsPopup from './StatsPopup';
 
 import SummaryTab     from './SummaryTab'
@@ -45,19 +44,6 @@ export default function DeckDetail() {
     setShowSharePopup(true);
   }
 
-  function resetPoints() {
-    setDecks(prevDecks =>
-      prevDecks.map(d =>
-        d.id === deck.id
-          ? {
-              ...d,
-              cards: d.cards.map(card => ({ ...card, point: 0 }))  
-            }
-          : d
-      )
-    );
-  }
-
   const handlePlay = () => {
   if (viewMode === 'summary') {
   const svg = document.querySelector('.mermaid svg');
@@ -77,51 +63,6 @@ export default function DeckDetail() {
     navigate(`/deck/${deck.id}/quiz/0`);
   }
 };
-
-  const [newQ, setNewQ]           = useState('')
-  const [newA, setNewA]           = useState('')
-  const [adding, setAdding]       = useState(false)
-  const newFileRef                = useRef()
-  const [newFileObj, setNewFileObj] = useState(null)
-  const [newImgUrl, setNewImgUrl] = useState('')
-
-  
-
-  function cancelAdd() {
-    setAdding(false)
-    setNewQ('')
-    setNewA('')
-    setNewImgUrl('')
-    setNewFileObj(null)
-  }
-
-  function saveNewCard() {
-      if (!newQ.trim() || !newA.trim()) {
-        return alert('Q and A are required')
-      }
-      const card = {
-        id:       uuid(),
-        question: newQ.trim(),
-        answer:   newA.trim(),
-        keyword:  '',          
-        needs_image: !!newImgUrl,
-        image:    newImgUrl,
-        point:     0,
-        repetitions: 0,
-        interval:  0,
-        ef:        2.5,
-        due:       new Date().toISOString().slice(0,10),
-        taxonomy: 'Manual'
-      }
-      const updated = decks.map(d =>
-        d.id !== deck.id
-          ? d
-          : { ...d, cards: [card, ...d.cards], total: d.total + 1, due: d.due + 1 }
-      )
-      setDecks(updated)
-      localStorage.setItem('decks', JSON.stringify(updated))
-      cancelAdd()
-    }
 
     const shareLink = `https://relian.com/deck/${deck.id}?share=true`;
 

@@ -18,13 +18,16 @@ import Profile from './Profile.jsx'
 
 import QuizPlayer from './QuizPlayer.jsx';
 
+import { Suspense } from 'react';
+
 function App() {
   const { decks } = useDecks();
   return (
     <BrowserRouter>
     <div className="flex h-screen w-full overflow-hidden">
       
-      <Sidebar />                
+      <Sidebar />   
+      <Suspense fallback={<div>Loading…</div>}>          
       <main className="flex h-screen w-full">
         <Routes>
           <Route path="/" element={<FlashcardDeckTable decks={decks}/>} />
@@ -37,6 +40,7 @@ function App() {
           <Route path="/deck/:id/quiz/:idx" element={<QuizPlayer />} />
         </Routes>
       </main>
+      </Suspense>   
     </div>
     </BrowserRouter>
   );

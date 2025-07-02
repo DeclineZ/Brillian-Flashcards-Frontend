@@ -1,5 +1,4 @@
 // src/components/LearnTogether.jsx
-import React from 'react'
 import { Heart, Flame, ThumbsUp, Trophy } from 'lucide-react'
 import profile from './assets/profile.png'
 

@@ -1,4 +1,4 @@
-import { useState,useRef,useEffect } from "react";
+import { useState,useRef } from "react";
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -30,15 +30,8 @@ const learningStats = [
   { label: 'Streak Days', value: '7', bg: 'bg-orange-50', text: 'orange-600' }
 ];
 
-const learningStylesRaw = [
-  { color: "bg-red-500", label: "Visual", value: 100 },
-  { color: "bg-blue-500", label: "Verbal", value: 300},
-  { color: "bg-yellow-500", label: "Logical", value:100 },
-  { color: "bg-green-500", label: "RealWorld", value: 110 },
-];
-
 const ProfilePage = () => {
-  const { learningPrefs, userXP, level, progress } = useDecks();
+  const { learningPrefs, level, progress } = useDecks();
   // User and ranking data
   const [user] = useState({
     name: "NSC2025",

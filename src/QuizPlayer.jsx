@@ -1,11 +1,8 @@
-/* -------------------------------------------------
-   Smart-Quiz Player — now with top-bar stats
-   ------------------------------------------------- */
-import React, { useState, useEffect, useRef } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext';
-import { ArrowLeft, CheckCircle2, Clock, ArrowRight, Mic, MicOff } from 'lucide-react';
-import StatsPopup from './StatsPopup.jsx';      // ✅ XP toast you already use
+import { ArrowLeft, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
 
 export default function QuizPlayer() {
   const { id, idx } = useParams();
@@ -24,7 +21,7 @@ export default function QuizPlayer() {
   const [loadingEval, setLoadingEval] = useState(false);
   const [showXpMessage, setShowXpMessage] = useState(false);
   const [xpMessage,     setXpMessage]     = useState('');
-  const { userXP, setUserXP }             = useDecks();
+  const { setUserXP }             = useDecks();
 
   const feedbackRef = useRef(null);
   const BASE = import.meta.env.VITE_API_URL;

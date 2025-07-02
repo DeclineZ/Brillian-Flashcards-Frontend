@@ -8,7 +8,7 @@ import profile from './assets/profile.png';
 import { useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
-  const { decks, userXP, level, progress } = useDecks(); 
+  const { decks, level, progress } = useDecks(); 
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);

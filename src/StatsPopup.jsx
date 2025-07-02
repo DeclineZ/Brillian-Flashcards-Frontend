@@ -1,4 +1,3 @@
-import React from 'react'
 import { useDecks } from './lib/DeckContext'
 
 export default function StatsPopup({ onClose, deckId }) {
