@@ -111,9 +111,9 @@ function QuizCard({ quiz, onRetry }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
+    <div className=" bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
       {/* Header */}
-      <div className="bg-white border-b border-blue-100 p-3">
+      <div onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer  bg-white border-b border-blue-100 p-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-4">
