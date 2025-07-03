@@ -13,7 +13,6 @@ export default function FlashcardView({ deck, onDeleteCard, onUpdateCard }) {
 
   // Handle updating a card both locally and via parent callback
   const handleUpdateCard = (id, updatedFields, file) => {
-    console.log("handle update")
     setCards(prev =>
       prev.map(card => (card.id === id ? { ...card, ...updatedFields } : card))
     );
@@ -22,7 +21,6 @@ export default function FlashcardView({ deck, onDeleteCard, onUpdateCard }) {
 
   // Handle deleting a card locally and via parent callback
   const handleDeleteCard = id => {
-    setCards(prev => prev.filter(card => card.id !== id));
     if (onDeleteCard) onDeleteCard(id);
   };
 
