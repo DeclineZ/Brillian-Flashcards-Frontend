@@ -223,7 +223,8 @@ export default function Deckdetail() {
 
   const handlePlay = () => {
     console.log("Play mode activated");
-    navigate(`/deck/${deck.id}/play`);
+    (viewMode == "cards" && (navigate(`/deck/${deck.id}/play`)))
+    (viewMode == "quiz" && (navigate(`/deck/${deck.id}/quiz/0`)))
     // In real app: navigate(`/deck/${deck.id}/play`);
   };
 

@@ -1,25 +1,19 @@
+import { Suspense, lazy } from 'react';
+
 import './App.css'
-import Sidebar from './Sidebar.jsx';
-import FlashcardDeckTable from './FlashcardDeckTable.jsx'
-import CreateFlashcards from './CreateFlashcards.jsx';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import { useDecks } from './lib/DeckContext.jsx';
+import { useDecks }            from './lib/DeckContext.jsx';
 
-// import DeckDetail from './DeckDetail.jsx'
-import Deckdetail from './Deckdetail/DeckDetail.jsx';
-
-import FlashcardPlayer from './FlashcardPlayer';
-
-import CommunityPage from './CommunityPage.jsx';
-
-import LearnerTypePage from './LearnerTypePage.jsx';
-
-import Profile from './Profile.jsx'
-
-
-
-
+const Sidebar            = lazy(() => import('./Sidebar.jsx'));
+const FlashcardDeckTable = lazy(() => import('./FlashcardDeckTable.jsx'));
+const CreateFlashcards    = lazy(() => import('./CreateFlashcards.jsx'));
+const Deckdetail =  lazy(() => import('./Deckdetail/DeckDetail.jsx'));
+const FlashcardPlayer     = lazy(() => import('./FlashcardPlayer.jsx'));
+const CommunityPage       = lazy(() => import('./CommunityPage.jsx'));
+const LearnerTypePage     = lazy(() => import('./LearnerTypePage.jsx'));
+const Profile             = lazy(() => import('./Profile.jsx'));
+const QuizPlayer          = lazy(() => import('./QuizPlayer.jsx'));
 
 
 function App() {
@@ -28,7 +22,8 @@ function App() {
     <BrowserRouter>
     <div className="flex h-screen w-full overflow-hidden">
       
-      <Sidebar />                
+      <Sidebar />   
+      <Suspense fallback={<div>Loading…</div>}>          
       <main className="flex h-screen w-full">
         <Routes>
           <Route path="/" element={<FlashcardDeckTable decks={decks}/>} />
@@ -38,8 +33,10 @@ function App() {
           <Route path="/deck/:id/play" element={<FlashcardPlayer />} />
           <Route path="/LTP" element={<LearnerTypePage />} />
           <Route path="/Profile" element={<Profile />} />
+          <Route path="/deck/:id/quiz/:idx" element={<QuizPlayer />} />
         </Routes>
       </main>
+      </Suspense>   
     </div>
     </BrowserRouter>
   );
