@@ -23,6 +23,7 @@ export default function FlashcardView({ deck, onDeleteCard, onUpdateCard }) {
   const handleDeleteCard = id => {
     if (onDeleteCard) onDeleteCard(id);
   };
+  
 
   return (
     <div className="space-y-6">
@@ -104,14 +105,29 @@ function FlashcardItem({ card, index, onDelete, onUpdate }) {
     setEditedImageFile(null);
     setIsEditing(false);
   };
+   const getTaxonomyLabelColor = (taxonomy) => {
+    switch (taxonomy) {
+      case "Remembering":
+        return "text-blue-500";
+      case "Understanding":
+        return "text-green-500";
+      case "Applying":
+        return "text-yellow-500";
+      default:
+        return "text-gray-500";
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-          <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
-            {index}
-          </span>
+          <div className="flex space-x-2 items-center">
+            <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
+              {index} 
+            </span>
+            <span className={`inline-flex font-semibold ${getTaxonomyLabelColor(card.taxonomy)}`}>{card.taxonomy}</span>
+          </div>
           <div className="flex space-x-2">
             {!isEditing && (
               <>
