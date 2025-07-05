@@ -54,7 +54,7 @@ const PlayIcon = ({ size = 24, color = "#ffffff" }) => {
   );
 };
 
-export default function Deckdetail() {
+export default function DeckDetail() {
   const { decks, setDecks } = useDecks();
   const { id } = useParams();
   const navigate = useNavigate();
