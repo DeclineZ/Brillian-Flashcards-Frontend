@@ -50,11 +50,6 @@ export default function SmartQuizView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-left">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Smart Quiz</h2>
-        <p className="text-gray-600">{smartDeck.description}</p>
-      </div>
 
       {/* Quiz Cards */}
       <div className="space-y-4">
@@ -220,12 +215,4 @@ function AddQuizButton({ onClick }) {
       <span className="text-lg">Add New Quiz Question</span>
     </button>
   );
-}
-
-// Utility for formatting time
-function formatTime(seconds) {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}m ${s}s`;
 }

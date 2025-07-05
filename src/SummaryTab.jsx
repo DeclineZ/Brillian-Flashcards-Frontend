@@ -14,7 +14,7 @@ export default function SummaryTab() {
 
   return (
     <div className="space-y-8">
-      {/* About Card */}
+      {/* About Card
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex items-start space-x-4">
           <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -27,7 +27,7 @@ export default function SummaryTab() {
             <p className="text-gray-600 leading-relaxed">{deck.description}</p>
           </div>
         </div>
-      </div>
+      </div> */}
       
       {/* Description Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
