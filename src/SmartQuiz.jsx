@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDecks } from "../lib/DeckContext";
+import { useDecks } from "./lib/DeckContext";
 import {
   Brain,
   RotateCcw,

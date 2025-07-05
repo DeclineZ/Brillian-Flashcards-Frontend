@@ -1,5 +1,5 @@
 import React from "react";
-import { useDecks } from "../lib/DeckContext";
+import { useDecks } from "./lib/DeckContext";
 import { X } from "lucide-react";
 
 export default function StatsPopup({ deckId, onClose, onReset }) {
