@@ -7,7 +7,6 @@ import { useDecks } from './lib/DeckContext.jsx';
 import confetti from 'canvas-confetti';
 import { withTimeout } from './lib/aiTimeout.js';
 import { calculateNext } from './lib/sm2.js';
-import { v4 as uuid } from 'uuid';
 
 export default function FlashcardPlayer() {
   const { decks, setDecks } = useDecks();
@@ -387,24 +386,7 @@ useEffect(() => {
 
   function confirmAdd() {
     if (checked.length === 0) return setMoreOpen(false);
-    const rawSelected = moreCards.filter((c) => checked.includes(c.id));
-
-    const now = Date.now();
-  const selected = rawSelected.map(c => ({
-    id:          uuid(),            // or re-use c.id if you prefer
-    question:    c.question,
-    answer:      c.answer,
-    keyword:     c.keyword,
-    needs_image: c.needs_image,
-    image:       c.image || null,   // if your API included an image
-    taxonomy:    c.taxonomy || 'Remembering', // pick a default level
-    point:       0,
-    repetitions: 0,
-    interval:    0,
-    ef:          2.5,
-    nextReview:  now,               // ready immediately
-  }));
-
+    const selected = moreCards.filter((c) => checked.includes(c.id));
     setDecks((prev) =>
       prev.map((d) =>
         d.id === deck.id ? { ...d, cards: [...d.cards, ...selected], total: d.cards.length + selected.length } : d,
