@@ -2,7 +2,6 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useDecks } from "./lib/DeckContext";
 import {
-  Share2,
   BookOpen,
 } from "lucide-react";
 
