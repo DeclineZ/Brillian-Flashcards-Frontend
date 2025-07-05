@@ -201,4 +201,3 @@ function QuizCard({ quiz, onRetry }) {
     </div>
   );
 }
-
