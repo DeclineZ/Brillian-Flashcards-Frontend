@@ -118,7 +118,7 @@ export default function DeckDetail() {
   return (
     <div className="w-full h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col overflow-hidden">
       {/* Header with Play, Stats, Share, Settings */}
-      <header className="w-full bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-200 z-50">
+      <header className="w-full bg-white/95 backdrop-blur-sm shadow-md border-b border-gray-200 z-50 shadow-blue-100">
         <div className="px-4 lg:px-8">
           <div className="flex justify-between items-center py-3">
             <h1 className="font-bold text-gray-900">{deck.name}</h1>
