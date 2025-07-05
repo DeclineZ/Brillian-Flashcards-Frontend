@@ -1,37 +1,111 @@
-// src/FlashcardsTab.jsx
-import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useDecks } from "./lib/DeckContext";
-import { v4 as uuid } from "uuid";
-import { PlusCircle, Plus, Check, Pencil, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import {
+  CreditCard,
+  Edit,
+  Trash2,
+  Check,
+  X,
+} from 'lucide-react';
 
-export default function FlashcardsTab() {
-  const { decks, setDecks } = useDecks();
-  const { id } = useParams();
-  const [adding, setAdding] = useState(false);
+export default function FlashcardView({ deck, onDeleteCard, onUpdateCard }) {
+  // Maintain local cards state to reflect edits immediately
+  const [cards, setCards] = useState(deck.cards);
 
-  const deck = decks.find((d) => String(d.id) === id);
+  // Handle updating a card both locally and via parent callback
+  const handleUpdateCard = (id, updatedFields, file) => {
+    setCards(prev =>
+      prev.map(card => (card.id === id ? { ...card, ...updatedFields } : card))
+    );
+    if (onUpdateCard) onUpdateCard(id, updatedFields, file);
+  };
 
-  const [editingId, setEditingId] = useState(null);
-  const [formQ, setFormQ] = useState("");
-  const [formA, setFormA] = useState("");
-  const [formImg, setFormImg] = useState("");
-  const [fileObj, setFileObj] = useState(null);
-  const inputFileRef = useRef();
-  const [newQ, setNewQ] = useState("");
-  const [newA, setNewA] = useState("");
-  const newFileRef = useRef();
-  const [newFileObj, setNewFileObj] = useState(null);
-  const [newImgUrl, setNewImgUrl] = useState("");
+  // Handle deleting a card locally and via parent callback
+  const handleDeleteCard = id => {
+    if (onDeleteCard) onDeleteCard(id);
+  };
+  
 
-  const [showPopUp, setShowPopUp] = useState(false);
-  const [taxonomyCounts, setTaxonomyCounts] = useState({
-    Remembering: 0,
-    Understanding: 0,
-    Applying: 0,
-  });
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-left">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Flashcards</h2>
+        <p className="text-gray-600">{deck.description}</p>
+      </div>
 
-  const getTaxonomyLabelColor = (taxonomy) => {
+      {/* Cards Grid */}
+      <div className="space-y-4">
+        {cards.map((card, index) => (
+          <FlashcardItem
+            key={card.id}
+            card={card}
+            index={index + 1}
+            onDelete={() => handleDeleteCard(card.id)}
+            onUpdate={(updated, file) => handleUpdateCard(card.id, updated, file)}
+          />
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {cards.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CreditCard className="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No flashcards yet
+          </h3>
+          <p className="text-gray-500">
+            Add some cards to get started with your studying!
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FlashcardItem({ card, index, onDelete, onUpdate }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedQuestion, setEditedQuestion] = useState(card.question);
+  const [editedAnswer, setEditedAnswer] = useState(card.answer);
+  const [editedImageURL, setEditedImageURL] = useState(card.image || '');
+  const [editedImageFile, setEditedImageFile] = useState(null);
+
+  // Cleanup preview URL on unmount or change
+  useEffect(() => {
+    return () => {
+      if (editedImageURL && editedImageFile) URL.revokeObjectURL(editedImageURL);
+    };
+  }, [editedImageURL, editedImageFile]);
+
+  const handleFileChange = e => {
+    const file = e.target.files[0];
+    if (file) {
+      const preview = URL.createObjectURL(file);
+      setEditedImageFile(file);
+      setEditedImageURL(preview);
+    }
+  };
+
+  const handleSave = () => {
+    const updated = {
+      question: editedQuestion.trim(),
+      answer: editedAnswer.trim(),
+      image: editedImageFile ? null : editedImageURL.trim() || null,
+    };
+    onUpdate(updated, editedImageFile);
+    setIsEditing(false);
+    setEditedImageFile(null);
+  };
+
+  const handleCancel = () => {
+    setEditedQuestion(card.question);
+    setEditedAnswer(card.answer);
+    setEditedImageURL(card.image || '');
+    setEditedImageFile(null);
+    setIsEditing(false);
+  };
+   const getTaxonomyLabelColor = (taxonomy) => {
     switch (taxonomy) {
       case "Remembering":
         return "text-blue-500";
@@ -44,323 +118,121 @@ export default function FlashcardsTab() {
     }
   };
 
-  useEffect(() => {
-    if (deck) {
-      const counts = {
-        Remembering: 0,
-        Understanding: 0,
-        Applying: 0,
-      };
-
-      deck.cards.forEach((card) => {
-        counts[card.taxonomy] = (counts[card.taxonomy] || 0) + 1;
-      });
-
-      setTaxonomyCounts(counts);
-
-      if (!localStorage.getItem(`deck-${deck.id}-popup-shown`)) {
-        setShowPopUp(true);
-        localStorage.setItem(`deck-${deck.id}-popup-shown`, "true");
-      }
-    }
-  }, [deck]);
-
-  if (!deck) {
-    return <div className="p-8">Deck not found!</div>;
-  }
-
-  function onNewFileChange(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    setNewFileObj(f);
-    setNewImgUrl(URL.createObjectURL(f));
-  }
-
-  function handleDeleteCard(cardId) {
-    if (!window.confirm("Are you sure you want to delete this card?")) return;
-    const updated = decks.map((d) =>
-      d.id !== deck.id
-        ? d
-        : {
-            ...d,
-            cards: d.cards.filter((c) => c.id !== cardId),
-            total: d.total - 1,
-            due: Math.max(0, d.due - 1),
-          }
-    );
-    setDecks(updated);
-    localStorage.setItem("decks", JSON.stringify(updated));
-  }
-
-  function startEdit(card) {
-    setEditingId(card.id);
-    setFormQ(card.question);
-    setFormA(card.answer);
-    setFormImg(card.image || "");
-    setFileObj(null);
-  }
-
-  async function finishEdit(card) {
-    const newImg = fileObj ? formImg : card.image;
-
-    setDecks((prev) =>
-      prev.map((d) =>
-        d.id !== deck.id
-          ? d
-          : {
-              ...d,
-              cards: d.cards.map((c) =>
-                c.id !== card.id
-                  ? c
-                  : {
-                      ...c,
-                      question: formQ,
-                      answer: formA,
-                      image: newImg,
-                      taxonomy: "Manual",
-                    }
-              ),
-            }
-      )
-    );
-    localStorage.setItem("decks", JSON.stringify(decks));
-    setEditingId(null);
-  }
-
-  function onFileChange(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    setFileObj(f);
-    setFormImg(URL.createObjectURL(f));
-  }
-
-  function cancelAdd() {
-    setAdding(false);
-    setNewQ("");
-    setNewA("");
-    setNewImgUrl("");
-    setNewFileObj(null);
-  }
-
-  function saveNewCard() {
-    if (!newQ.trim() || !newA.trim()) {
-      return alert("Q and A are required");
-    }
-    const card = {
-      id: uuid(),
-      question: newQ.trim(),
-      answer: newA.trim(),
-      keyword: "",
-      needs_image: !!newImgUrl,
-      image: newImgUrl,
-      point: 0,
-      repetitions: 0,
-      interval: 0,
-      ef: 2.5,
-      due: new Date().toISOString().slice(0, 10),
-      taxonomy: "Manual",
-    };
-    const updated = decks.map((d) =>
-      d.id !== deck.id
-        ? d
-        : {
-            ...d,
-            cards: [card, ...d.cards],
-            total: d.total + 1,
-            due: d.due + 1,
-          }
-    );
-    setDecks(updated);
-    localStorage.setItem("decks", JSON.stringify(updated));
-    cancelAdd();
-  }
-
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {adding ? (
-        <div className="bg-white p-4 rounded shadow space-y-2 border border-gray-200 mb-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-black">New Card</h3>
-            <button className="text-gray-500">
-              <Plus size={20} />
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Question"
-            value={newQ}
-            onChange={(e) => setNewQ(e.target.value)}
-            className="w-full border rounded px-2 py-1 text-black"
-          />
-
-          <textarea
-            rows={2}
-            placeholder="Answer"
-            value={newA}
-            onChange={(e) => setNewA(e.target.value)}
-            className="w-full border rounded px-2 py-1 text-black"
-          />
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => newFileRef.current.click()}
-              className="px-3 py-1 bg-blue-600 text-white rounded"
-            >
-              Choose Image
-            </button>
-            <span className="text-sm text-gray-600">
-              {newFileObj?.name ??
-                (newImgUrl ? "Using current image" : "No image")}
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
+      <div className="p-3">
+        <div className="flex justify-between items-start mb-1">
+          <div className="flex space-x-2 items-center">
+            <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
+              {index} 
             </span>
+            <span className={`inline-flex font-semibold ${getTaxonomyLabelColor(card.taxonomy)}`}>{card.taxonomy}</span>
           </div>
-          <input
-            ref={newFileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={onNewFileChange}
-          />
-
-          {newImgUrl && (
-            <img
-              src={newImgUrl}
-              className="w-24 h-24 object-cover rounded border"
-            />
-          )}
-
-          <div className="flex justify-end gap-2 mt-2">
-            <button
-              onClick={saveNewCard}
-              className="flex items-center gap-1 px-4 py-1 bg-blue-600 text-white rounded"
-            >
-              <Check size={16} /> Save
-            </button>
-            <button
-              onClick={cancelAdd}
-              className="px-4 py-1 bg-gray-200 text-gray-700 rounded"
-            >
-              Cancel
-            </button>
+          <div className="flex space-x-2">
+            {!isEditing && (
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            {isEditing && (
+              <>
+                <button
+                  onClick={handleSave}
+                  className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
-      ) : (
-        <button
-          onClick={() => setAdding(true)}
-          className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
-        >
-          <PlusCircle size={18} /> Add Card
-        </button>
-      )}
 
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2">
-        {deck.cards.map((card) => {
-          const isEditing = editingId === card.id;
-          return (
-            <div
-              key={card.id}
-              className="bg-white rounded shadow p-4 border border-gray-200 relative"
-            >
-              {/* edit/save icon */}
-              <button
-                onClick={() => (isEditing ? finishEdit(card) : startEdit(card))}
-                className="absolute top-2 right-8 text-gray-600 hover:text-gray-800 mr-4"
-              >
-                {isEditing ? <Check size={18} /> : <Pencil size={18} />}
-              </button>
-
-              <button
-                onClick={() => handleDeleteCard(card.id)}
-                className="absolute top-2 right-2 text-red-600 hover:text-red-800"
-              >
-                <Trash2 size={18} />
-              </button>
-
-              {isEditing ? (
-                <>
-                  {/* Question input */}
-                  <p className="text-black font-bold">Question</p>
-                  <textarea
-                    value={formQ}
-                    onChange={(e) => setFormQ(e.target.value)}
-                    rows={2}
-                    className="w-full border rounded p-2 mb-2 text-black"
-                  />
-
-                  {/* Answer input */}
-                  <p className="text-black font-bold">Answer</p>
-                  <textarea
-                    value={formA}
-                    onChange={(e) => setFormA(e.target.value)}
-                    rows={2}
-                    className="w-full border rounded p-2 mb-2 text-black"
-                  />
-
-                  {/* Image picker */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <button
-                      onClick={() => inputFileRef.current.click()}
-                      className="px-3 py-1 bg-blue-600 text-white rounded"
-                    >
-                      Choose Image
-                    </button>
-                    <span className="text-sm text-gray-600">
-                      {fileObj
-                        ? fileObj.name
-                        : formImg
-                        ? "Using current image"
-                        : "No image"}
-                    </span>
-                  </div>
+        {/* Image + Q/A Layout */}
+        <div className="flex items-start space-x-4">
+          {(editedImageURL || isEditing) && (
+            <div className="flex-shrink-0 w-24 h-24 bg-gray-50 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center">
+              {!isEditing && editedImageURL ? (
+                <img
+                  src={editedImageURL}
+                  alt="Flashcard"
+                  className="w-full h-full object-cover"
+                />
+              ) : isEditing ? (
+                <label className="w-full h-full flex flex-col items-center justify-center text-gray-500 cursor-pointer">
                   <input
-                    ref={inputFileRef}
                     type="file"
                     accept="image/*"
+                    onChange={handleFileChange}
                     className="hidden"
-                    onChange={onFileChange}
                   />
-                  {formImg && (
+                  {editedImageURL ? (
                     <img
-                      src={formImg}
-                      alt=""
-                      className="w-24 h-24 object-cover rounded mb-2 border"
+                      src={editedImageURL}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
                     />
+                  ) : (
+                    <span className="text-sm">Upload</span>
                   )}
-                </>
+                  <p className="mt-1 text-xs text-gray-500">You can upload an image</p>
+                </label>
               ) : (
-                <>
-                  {/* Display mode: only add gap if there's an image */}
-                  <div
-                    className={`flex items-center ${
-                      card.image ? "gap-5" : "gap-0"
-                    }`}
-                  >
-                    {card.image && (
-                      <img
-                        src={card.image}
-                        alt=""
-                        className="w-24 h-24 object-cover rounded border flex-shrink-0"
-                      />
-                    )}
-                    <div>
-                      <h2 className="font-semibold mb-1 text-black">
-                        Q: {card.question}
-                        <span
-                          className={`taxonomy-label ${getTaxonomyLabelColor(
-                            card.taxonomy
-                          )} ml-2`}
-                        >
-                          {card.taxonomy}
-                        </span>
-                      </h2>
-                      <p className="text-sm text-gray-600 ">A: {card.answer}</p>
-                    </div>
-                  </div>
-                </>
+                <CreditCard className="w-10 h-10 text-gray-300" />
               )}
             </div>
-          );
-        })}
+          )}
+
+          <div className="flex-1 space-y-2">
+            <div className="p-2 bg-gray-50 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <span className="font-semibold text-blue-900 flex-shrink-0">Q:</span>
+                {!isEditing ? (
+                  <p className="text-blue-800 font-medium">{card.question}</p>
+                ) : (
+                  <textarea
+                    value={editedQuestion}
+                    onChange={e => setEditedQuestion(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg p-2 text-blue-800 font-medium"
+                    rows={2}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="p-2 bg-blue-50 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <span className="font-semibold text-green-900 flex-shrink-0">A:</span>
+                {!isEditing ? (
+                  <p className="text-gray-800">{card.answer}</p>
+                ) : (
+                  <textarea
+                    value={editedAnswer}
+                    onChange={e => setEditedAnswer(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg p-2 text-gray-800"
+                    rows={2}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
