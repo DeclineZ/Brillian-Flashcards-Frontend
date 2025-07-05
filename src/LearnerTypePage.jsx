@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Image, Globe, Cpu, Book, HelpCircle } from "lucide-react";
+import { useDecks } from "./lib/DeckContext.jsx";      
 
 const learnerTypes = [
   {
@@ -41,13 +42,22 @@ const learnerTypes = [
   },
 ];
 
+
+
 export default function LearnerTypePage() {
   const navigate = useNavigate();
+  const { setLearningPrefs } = useDecks();
 
   function choose(type) {
-    localStorage.setItem("learnerType", type);
-    navigate("/create"); 
-  }
+    setLearningPrefs({
+      visual:     type === 'visual'    ? 1 : 0,
+      verbal:     type === 'verbal'    ? 1 : 0,
+      logical:    type === 'logical'   ? 1 : 0,
+      realworld:  type === 'realworld' ? 1 : 0,
+    });
+     navigate('/create');
+   }
+  
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center p-6">
@@ -69,14 +79,12 @@ export default function LearnerTypePage() {
               onClick={() => choose(id)}
               className="group relative flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-4 focus:ring-indigo-200"
             >
-              {/* icon */}
               <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${color}`}
               >
                 <Icon size={24} />
               </div>
 
-              {/* text */}
               <div className="text-left">
                 <h3 className="font-semibold text-lg text-gray-900">
                   {label}
@@ -84,7 +92,6 @@ export default function LearnerTypePage() {
                 <p className="mt-1 text-sm text-gray-600">{desc}</p>
               </div>
 
-              {/* hover accent */}
               <span className="absolute inset-0 rounded-xl ring-1 ring-transparent transition group-hover:ring-indigo-300" />
             </button>
           ))}

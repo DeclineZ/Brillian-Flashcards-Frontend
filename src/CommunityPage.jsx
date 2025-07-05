@@ -71,9 +71,6 @@ const topics = {
 };
 
 export default function LearnTogether() {
-  const navigate = useNavigate()
-  const { decks } = useDecks()
-  const validDecks = Array.isArray(decks) ? decks : []
 
   return (
     <div className="w-full flex justify-center py-6 px-4 h-full overflow-y-auto">

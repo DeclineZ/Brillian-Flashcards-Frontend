@@ -1,41 +1,109 @@
-import React from "react";
-import { useParams } from "react-router-dom";
-import { useDecks } from "./lib/DeckContext";
-import {
-  BookOpen,
-} from "lucide-react";
+import { useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
+import { useDecks } from './lib/DeckContext';
+import mermaid from 'mermaid';
+import openDiagramInNewTab from './lib/openDiagram';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+  securityLevel: 'strict',
+  flowchart: {
+    htmlLabels: true
+  },
+  themeVariables: {
+    fontSize: '20px',
+  },
+});
 
 export default function SummaryTab() {
   const { id } = useParams();
   const { decks } = useDecks();
   const deck = decks.find((d) => String(d.id) === id);
-  if (!deck) return <p className="p-4 text-gray-500">Deck not found</p>;
-  const summaryHtml = deck.summaryHtml;
+  const containerRef = useRef(null);
 
-  return (
-    <div className="space-y-8">
-      {/* About Card
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-        <div className="flex items-start space-x-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              About this deck
-            </h2>
-            <p className="text-gray-600 leading-relaxed">{deck.description}</p>
-          </div>
-        </div>
-      </div> */}
-      
-      {/* Description Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div
-          className="prose max-w-none text-black"
-          dangerouslySetInnerHTML={{ __html: summaryHtml }}
-        />
-      </div>
+  // ✅ Extract mermaid rendering into its own helper
+  const renderMermaidDiagrams = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const nodes = Array.from(container.querySelectorAll('.mermaid'));
+    nodes.forEach((el) => {
+      const dsl = el.textContent.trim();
+      try {
+        mermaid.parse(dsl);
+      } catch (err) {
+        console.warn('Mermaid parse failed:', err);
+        el.remove();
+        return;
+      }
+    });
+
+    try {
+      mermaid.run();
+      container.querySelectorAll('.mermaid').forEach((block) => {
+        if (block.__brillianBound) return;
+        block.style.cursor = 'zoom-in';
+        block.addEventListener('click', () => {
+          const svg = block.querySelector('svg');
+          if (svg) openDiagramInNewTab(svg);
+        });
+        block.__brillianBound = true;
+      });
+    } catch (err) {
+      console.warn('Mermaid render failed:', err);
+      container.querySelectorAll('.mermaid').forEach((el) => el.remove());
+    }
+  };
+
+  useEffect(() => {
+  if (!containerRef.current) return;
+
+  let timeoutId = null;
+
+  const observer = new MutationObserver((mutations) => {
+    let shouldRender = false;
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (
+          node.nodeType === 1 && // ELEMENT_NODE
+          node.matches &&
+          node.matches('.mermaid')
+        ) {
+          shouldRender = true;
+        }
+      }
+    }
+
+    if (shouldRender) {
+      // Debounce multiple rapid calls
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        renderMermaidDiagrams();
+      }, 50);
+    }
+  });
+
+  observer.observe(containerRef.current, {
+    childList: true,
+    subtree: true,
+  });
+
+  return () => {
+    observer.disconnect();
+    clearTimeout(timeoutId);
+  };
+}, []);
+
+  return !deck ? (
+    <p className="p-4 text-gray-500">Deck not found</p>
+  ) : (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div
+        ref={containerRef}
+        className="prose max-w-none text-black"
+        dangerouslySetInnerHTML={{ __html: deck.summaryHtml.replace(/ \u0E32/g, '\u0E33').normalize('NFC') }}
+      />
     </div>
   );
 }

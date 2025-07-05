@@ -1,3 +1,5 @@
+import { useDecks } from './lib/DeckContext'
+
 
 export default function StatsPopup({ deckId, onClose, onReset }) {
   const { decks } = useDecks();
@@ -20,12 +22,6 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
         {/* Header */}
         <div className="flex items-center justify-between p-8 pb-0">
           <h2 className="text-2xl font-medium text-gray-900">Progress</h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all duration-200"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Content Grid */}
