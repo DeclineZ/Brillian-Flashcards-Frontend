@@ -18,6 +18,7 @@
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.9",
     "lucide-react": "^0.523.0",
+    "mermaid": "^11.8.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
