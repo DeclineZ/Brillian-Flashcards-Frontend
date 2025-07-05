@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDecks } from './lib/DeckContext';
 import { useParams } from 'react-router-dom';
-import { CreditCard, Edit, Trash2, Check, X, Clock } from 'lucide-react';
+import { CreditCard, Edit, Trash2, Check, X, Clock, Plus } from 'lucide-react';
 
 export default function FlashcardView() {
   const { decks, setDecks } = useDecks();
@@ -24,6 +24,19 @@ export default function FlashcardView() {
     });
   };
 
+  // Add card only to local state; taxonomy set to Manual
+  const handleAddCard = () => {
+    const newCard = {
+      id: Date.now(),
+      question: '',
+      answer: '',
+      image: '',
+      taxonomy: 'Manual',
+      nextReview: new Date().toISOString(),
+    };
+    setCards(prev => [newCard, ...prev]);
+  };
+
   const handleUpdateCard = (cardId, updatedFields) => {
     const updatedCards = cards.map(c =>
       c.id === cardId ? { ...c, ...updatedFields } : c
@@ -32,6 +45,7 @@ export default function FlashcardView() {
     persistDecks(updatedCards);
   };
 
+  // Delete saved cards without alert
   const handleDeleteCard = cardId => {
     if (!window.confirm('Are you sure you want to delete this card?')) return;
     const updatedCards = cards.filter(c => c.id !== cardId);
@@ -52,19 +66,30 @@ export default function FlashcardView() {
     });
   };
 
+  // Remove unsaved card silently
+  const handleRemoveCardSilent = cardId => {
+    setCards(prev => prev.filter(c => c.id !== cardId));
+  };
+
   if (!deck) return <div className="p-8">Deck not found!</div>;
 
-  // Sort cards: due first, then not due
   const now = Date.now();
   const sortedCards = [...cards].sort((a, b) => {
-    const aDue = new Date(a.nextReview).getTime() <= now;
-    const bDue = new Date(b.nextReview).getTime() <= now;
-    if (aDue === bDue) return 0;
-    return aDue ? -1 : 1;
+    const dueA = new Date(a.nextReview).getTime() <= now;
+    const dueB = new Date(b.nextReview).getTime() <= now;
+    return dueA === dueB ? 0 : dueA ? -1 : 1;
   });
 
   return (
     <div className="space-y-6 p-4">
+      <button
+        onClick={handleAddCard}
+        className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-6 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-3 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+      >
+        <Plus className="w-6 h-6" />
+        <span className="text-lg">Add New Quiz Question</span>
+      </button>
+
       <div className="space-y-4">
         {sortedCards.length > 0 ? (
           sortedCards.map((card, idx) => (
@@ -72,8 +97,9 @@ export default function FlashcardView() {
               key={card.id}
               card={card}
               index={idx + 1}
-              onUpdate={updated => handleUpdateCard(card.id, updated)}
+              onUpdate={fields => handleUpdateCard(card.id, fields)}
               onDelete={() => handleDeleteCard(card.id)}
+              onRemove={() => handleRemoveCardSilent(card.id)}
             />
           ))
         ) : (
@@ -90,8 +116,8 @@ export default function FlashcardView() {
   );
 }
 
-function FlashcardItem({ card, index, onUpdate, onDelete }) {
-  const [isEditing, setIsEditing] = useState(false);
+function FlashcardItem({ card, index, onUpdate, onDelete, onRemove }) {
+  const [isEditing, setIsEditing] = useState(card.question === '');
   const [editedQuestion, setEditedQuestion] = useState(card.question);
   const [editedAnswer, setEditedAnswer] = useState(card.answer);
   const [editedImageURL, setEditedImageURL] = useState(card.image || '');
@@ -105,16 +131,12 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
   const hours = Math.floor((diff % 86400000) / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
   const countdownText =
-    diff === 0
-      ? 'Due now'
-      : days > 0
-      ? `${days}d ${hours}h `
-      : hours > 0
-      ? `${hours}h`
-      : `${minutes}m`;
+    diff === 0 ? 'Due now' : days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h` : `${minutes}m`;
 
-  useEffect(() => () => {
-    if (editedImageURL && editedImageFile) URL.revokeObjectURL(editedImageURL);
+  useEffect(() => {
+    return () => {
+      if (editedImageURL && editedImageFile) URL.revokeObjectURL(editedImageURL);
+    };
   }, [editedImageURL, editedImageFile]);
 
   const handleFileChange = e => {
@@ -125,44 +147,55 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
   };
 
   const handleSave = () => {
-    onUpdate({
-      question: editedQuestion.trim(),
-      answer: editedAnswer.trim(),
-      image: editedImageFile ? null : editedImageURL,
-    });
-    setIsEditing(false);
-    setEditedImageFile(null);
+    if (!editedQuestion.trim() == "" && !editedAnswer.trim() == "") {
+      onUpdate({
+        question: editedQuestion.trim(),
+        answer: editedAnswer.trim(),
+        image: editedImageFile ? null : editedImageURL,
+      });
+      setIsEditing(false);
+      setEditedImageFile(null);
+    }
   };
 
   const handleCancel = () => {
-    setEditedQuestion(card.question);
-    setEditedAnswer(card.answer);
-    setEditedImageURL(card.image || '');
-    setEditedImageFile(null);
-    setIsEditing(false);
+    if (!card.question) {
+      onRemove();
+    } else {
+      setEditedQuestion(card.question);
+      setEditedAnswer(card.answer);
+      setEditedImageURL(card.image || '');
+      setEditedImageFile(null);
+      setIsEditing(false);
+    }
   };
 
   const colorClass = taxonomy => {
-    const base = {
+    const baseMap = {
       Remembering: 'blue',
       Understanding: 'green',
-      Applying: 'yellow'
-    }[taxonomy] || 'gray';
+      Applying: 'yellow',
+      Manual: 'purple',
+    };
+    const base = baseMap[taxonomy] || 'gray';
     return isDue ? `text-${base}-600` : `text-${base}-300`;
   };
 
   return (
-    <div className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-200
-      ${isDue 
-        ? 'bg-white text-black' 
-        : 'bg-gray-100 text-gray-500 border border-gray-300 opacity-80'}`}>
-      <div className="p-4 flex flex-col h-full">
+    <div
+      className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-200 ${
+        isDue
+          ? 'bg-white text-black'
+          : 'bg-gray-100 text-gray-500 border border-gray-300 opacity-80'
+      }`}
+    >
+     <div className="p-4 flex flex-col h-full">
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center space-x-2">
             <span className="inline-flex w-8 h-8 items-center justify-center bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
               {index}
             </span>
-            <span className={`${colorClass(card.taxonomy)} font-semibold`} >{card.taxonomy}</span>
+            <span className={`${colorClass(card.taxonomy)} font-semibold`}>{card.taxonomy}</span>
           </div>
           <div className="flex space-x-1">
             {!isEditing ? (
@@ -192,7 +225,7 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
             <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
               {!isEditing && editedImageURL ? (
                 <img src={editedImageURL} alt="Flashcard" className="w-full h-full object-cover" />
-              ) : isEditing ? (
+              ) : (
                 <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-gray-500">
                   <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   {editedImageURL ? (
@@ -201,8 +234,6 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
                     <span className="text-sm">Upload</span>
                   )}
                 </label>
-              ) : (
-                <CreditCard className="w-10 h-10 text-gray-300" />
               )}
             </div>
           )}
@@ -211,7 +242,12 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
               <div className="flex items-start space-x-3">
                 <span className="text-blue-900 font-semibold">Q:</span>
                 {isEditing ? (
-                  <textarea rows={2} value={editedQuestion} onChange={e => setEditedQuestion(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-blue-800 font-medium" />
+                  <textarea
+                    rows={2}
+                    value={editedQuestion}
+                    onChange={e => setEditedQuestion(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg p-2 text-blue-800 font-medium"
+                  />
                 ) : (
                   <p className={`${isDue ? 'text-blue-800' : 'text-gray-700'} font-medium`}>{card.question}</p>
                 )}
@@ -222,7 +258,12 @@ function FlashcardItem({ card, index, onUpdate, onDelete }) {
               <div className="flex items-start space-x-3">
                 <span className="text-green-900 font-semibold">A:</span>
                 {isEditing ? (
-                  <textarea rows={2} value={editedAnswer} onChange={e => setEditedAnswer(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-gray-800" />
+                  <textarea
+                    rows={2}
+                    value={editedAnswer}
+                    onChange={e => setEditedAnswer(e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg p-2 text-gray-800"
+                  />
                 ) : (
                   <p className={`${isDue ? 'text-gray-800' : 'text-gray-700'} font-medium`}>{card.answer}</p>
                 )}
