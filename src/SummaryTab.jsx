@@ -98,7 +98,7 @@ export default function SummaryTab() {
   return !deck ? (
     <p className="p-4 text-gray-500">Deck not found</p>
   ) : (
-    <div className="flex-1 overflow-y-auto p-4 bg-white rounded shadow">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div
         ref={containerRef}
         className="prose max-w-none text-black"

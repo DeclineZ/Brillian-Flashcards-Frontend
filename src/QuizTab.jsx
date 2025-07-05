@@ -1,116 +1,204 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useDecks } from './lib/DeckContext';
-import { ChevronDown, ChevronRight, CornerDownRight, PencilLine, Check, X, Lightbulb, Timer } from 'lucide-react';
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useDecks } from "./lib/DeckContext";
+import {
+  Brain,
+  RotateCcw,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+  Lightbulb,
+  Clock
+} from "lucide-react";
 
-export default function QuizTab() {
-  const { id }       = useParams();          
-  const navigate     = useNavigate();
-  const { decks }    = useDecks();
-  const deck         = decks.find(d => String(d.id) === id);
-  const [openIdx, setOpenIdx] = useState(null);
+export default function SmartQuizView() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { decks } = useDecks();
+  const deck = decks.find((d) => String(d.id) === id);
 
-  if (!deck) return <div className="p-8">Deck not found.</div>;
+  if (!deck) {
+    return <div className="p-8">Deck not found.</div>;
+  }
 
-  const questions = Array.isArray(deck.quiz) ? deck.quiz : [];
-
-  
-
-  const bestObj = idx => {
+  // Build cards array from deck.quiz + stored "best" results
+  const cards = (Array.isArray(deck.quiz) ? deck.quiz : []).map((q, idx) => {
+    let raw = null;
     try {
-      const raw = localStorage.getItem(`quiz-${deck.id}-${idx}-best`);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+      raw = JSON.parse(localStorage.getItem(`quiz-${deck.id}-${idx}-best`));
+    } catch {}
+    const best = raw || {};
+
+    return {
+      id: idx,
+      question: q.question,
+      percent: typeof best.percent === "number" ? best.percent : 0,
+      positive: Array.isArray(best.positive) ? best.positive : [],
+      negative: Array.isArray(best.negative) ? best.negative : [],
+      suggestion: typeof best.suggestion === "string" ? best.suggestion : "",
+      answer: typeof best.answer === "string" ? best.answer : "",
+      time: typeof best.time === "number" ? best.time : 0
+    };
+  });
+
+  const smartDeck = {
+    description: deck.description,
+    cards
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      {questions.length === 0 ? (
-        <p className="text-gray-500">
-          This deck doesn’t have Smart-Quiz questions yet.
-        </p>
-      ) : (
-        questions.map((q, i) => {
-          let best = bestObj(i);
-if (best && typeof best === 'number') {
-  best = { percent: best };
-  localStorage.setItem(
-    `quiz-${deck.id}-${i}-best`,
-    JSON.stringify(best)
-  );
-}
+    <div className="space-y-6">
 
-// Safe fallbacks
-const pct        = best?.percent;
-const positives  = Array.isArray(best?.positive) ? best.positive : [];
-const negatives  = Array.isArray(best?.negative) ? best.negative : [];
-const suggestion = best?.suggestion || '';
-const bestAnswer = best?.answer || '';
-const bestTime   = typeof best?.time === 'number' ? best.time : null;
+      {/* Quiz Cards */}
+      <div className="space-y-4">
+        {smartDeck.cards.map((card) => (
+          <QuizCard
+            key={card.id}
+            quiz={card}
+            onRetry={() => navigate(`/deck/${deck.id}/quiz/${card.id}`)}
+          />
+        ))}
+      </div>
 
-          return (
-            <div key={i} className="space-y-1">
-              <div
-                className="flex items-center justify-between gap-4 p-4 bg-white rounded-xl
-                           shadow hover:shadow-md transition"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <button
-                    onClick={() =>
-                      best && setOpenIdx(openIdx === i ? null : i)
-                    }
-                    className={`text-gray-500 hover:text-gray-700
-                                ${!best && 'opacity-30 cursor-default'}`}
-                    aria-label="toggle details"
-                  >
-                    {openIdx === i ? (
-                      <ChevronDown size={18} />
-                    ) : (
-                      <ChevronRight size={18} />
-                    )}
-                  </button>
-
-                  <div className="flex flex-col">
-                    <p className="font-medium text-gray-900">
-                      {`Q${i + 1} : ${q.question}`}
-                    </p>
-                    <span className="text-sm font-semibold text-green-500">
-                      {pct !== undefined ? `${pct}% correct` : '—'}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => navigate(`/deck/${deck.id}/quiz/${i}`)}
-                  title="Answer this question"
-                  className="p-3 rounded-full bg-blue-50 text-blue-600
-                             hover:bg-blue-100 active:scale-95 transition"
-                >
-                  <CornerDownRight size={18} strokeWidth={2} />
-                </button>
-              </div>
-
-              {openIdx === i && best && (
-  <div className="ml-10 mr-4 mb-4 p-4 rounded-lg bg-gray-50 border border-gray-200 text-sm space-y-1">
-  <p className="text-gray-700 whitespace-pre-wrap flex">
-    <PencilLine size={17} strokeWidth={2} /> <span className="font-medium">Best Answer: </span> {bestAnswer}
-  </p>
-    <p className="text-green-500 flex"><span className="font-medium flex"><Check size={17} strokeWidth={2} /> Pros:&nbsp;</span>{positives.length ? positives.join(', ') : '-'}</p>
-    <p className="text-red-500 flex"><span className="font-medium text-red-500 flex"><X size={17} strokeWidth={2} /> Missed:&nbsp;</span>{negatives.length ? negatives.join(', ') : '-'}</p>
-    <p className="text-yellow-500 flex"><span className="font-medium text-yellow-500 flex"><Lightbulb size={17} strokeWidth={2} /> Suggestions:&nbsp;</span>{suggestion || '-'}</p>
-    {bestTime !== null && (
-  <p className="text-purple-700 flex">
-    <Timer size={17} strokeWidth={2} /> <span className="font-medium">Time Taken:&nbsp;</span> {bestTime.toFixed(1)} seconds
-  </p>
-)}
-  </div>
-)}
-            </div>
-          );
-        })
+      {/* Empty State */}
+      {smartDeck.cards.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Brain className="w-10 h-10 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No quiz questions
+          </h3>
+          <p className="text-gray-500">
+            Add some flashcards first to generate quiz questions!
+          </p>
+        </div>
       )}
     </div>
   );
 }
+
+function QuizCard({ quiz, onRetry }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const getPerformanceColor = (percentage) => {
+    if (percentage >= 80) return "text-green-600 bg-green-50 border-green-200";
+    if (percentage >= 60) return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    return "text-red-600 bg-red-50 border-red-200";
+  };
+
+  const getPerformanceIcon = (percentage) => {
+    if (percentage >= 80) return "🎯";
+    if (percentage >= 60) return "⚡";
+    return "📈";
+  };
+
+  const formatTime = (seconds) => {
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remaining = seconds % 60;
+    return `${minutes}m ${remaining}s`;
+  };
+
+  return (
+    <div className=" bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
+      {/* Header */}
+      <div onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer  bg-white border-b border-blue-100 p-3">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-4">
+              <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-3 py-1.5 rounded-full">
+                {`Q${quiz.id + 1}`}
+              </span>
+              <span className={`text-xs font-medium px-2 py-1 rounded-full border ${getPerformanceColor(quiz.percent)}`}>
+                {getPerformanceIcon(quiz.percent)} {quiz.percent}%
+              </span>
+            </div>
+            <p className="text-gray-900 font-medium text-lg leading-relaxed">
+              {quiz.question}
+            </p>
+          </div>
+          <div className="flex items-center space-x-2 ml-4">
+            <button
+              onClick={onRetry}
+              className="p-3 text-gray-400  hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-colors"
+            >
+              <RotateCcw className="w-5 h-5 text-blue-500" />
+            </button>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-3 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-colors"
+            >
+              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="p-4 space-y-2 bg-gray-50">
+          {/* Answer */}
+          <div className="bg-gray-100 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
+                Your Answer
+              </span>
+            </div>
+            <p className="text-gray-800 mt-3 leading-relaxed">{quiz.answer}</p>
+          </div>
+
+          {/* Positive Points*/}
+          {quiz.positive.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <h4 className="font-semibold text-gray-900">What you did well</h4>
+              </div>
+              <ul className="space-y-2 ml-7">
+                {quiz.positive.map((pt, i) => <li key={i} className="text-gray-700">• {pt}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* Negative Points */}
+          {quiz.negative.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <X className="w-5 h-5 text-red-600" />
+                <h4 className="font-semibold text-gray-900">Areas for improvement</h4>
+              </div>
+              <ul className="space-y-2 ml-7">
+                {quiz.negative.map((pt, i) => <li key={i} className="text-red-700">• {pt}</li>)}
+              </ul>
+            </div>
+          )}
+
+          {/* Suggestion */}
+          {quiz.suggestion && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Lightbulb className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Suggestion</h4>
+              </div>
+              <p className="text-gray-700 ml-7">{quiz.suggestion}</p>
+            </div>
+          )}
+
+          {/* Time Taken & Retry */}
+          <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-100">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-500">Time taken: {formatTime(quiz.time)}</span>
+            <button onClick={onRetry} className="px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded-xl flex items-center space-x-1">
+              <RotateCcw className="w-4 h-4 text-green-500" />
+              <span className="text-sm">Try again</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
