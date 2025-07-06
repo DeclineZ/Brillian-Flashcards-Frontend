@@ -20,10 +20,10 @@ import {
 
 import SummaryTab from "./SummaryTab";
 import StatsPopup from "./StatsPopup";
-import FlashcardView from "./FlashcardView";
-import SettingsModal from "./showSettings";
-import SharePopup from "./SharePopup";
-import SmartQuizView from "./SmartQuiz";
+import FlashcardView from "./FlashcardsTab";
+// import SettingsModal from "./showSettings";
+// import SharePopup from "./SharePopup";
+import SmartQuizView from "./QuizTab";
 
 // Custom Play icon
 const PlayIcon = ({ size = 24, color = "#ffffff" }) => {
@@ -54,7 +54,7 @@ const PlayIcon = ({ size = 24, color = "#ffffff" }) => {
   );
 };
 
-export default function Deckdetail() {
+export default function DeckDetail() {
   const { decks, setDecks } = useDecks();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -113,6 +113,69 @@ export default function Deckdetail() {
     navigator.clipboard.writeText(shareLink);
     alert("Link copied to clipboard!");
   };
+
+  function resetDueDates() {
+    console.log("AA");
+    const nowISO = new Date().toISOString();
+    const updatedDecks = decks.map((d) =>
+      d.id !== deck.id
+        ? d
+        : {
+            ...d,
+            cards: d.cards.map((card) => ({
+              ...card,
+              nextReview: nowISO,
+              repetition: 0,
+              interval: 0,
+              efactor: 2.5,
+            })),
+            due: d.cards.length,
+          }
+    );
+    setDecks(updatedDecks);
+    localStorage.setItem("decks", JSON.stringify(updatedDecks));
+    setShowSettings(false);
+  }
+
+  function handleDeleteDeck() {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this deck? This action cannot be undone."
+    );
+    if (confirmDelete) {
+      const updatedDecks = decks.filter((d) => d.id !== deck.id);
+      setDecks(updatedDecks);
+      localStorage.setItem("decks", JSON.stringify(updatedDecks));
+      navigate("/");
+    }
+    setShowSettings(false);
+  }
+
+  function handleEditDetails() {
+    const newDescription = prompt(
+      "Enter new description for the deck:",
+      deck.description
+    );
+    if (newDescription !== null) {
+      const updatedDecks = decks.map((d) =>
+        d.id === deck.id ? { ...d, description: newDescription } : d
+      );
+      setDecks(updatedDecks);
+      localStorage.setItem("decks", JSON.stringify(updatedDecks));
+    }
+    setShowSettings(false);
+  }
+
+  function handleRename() {
+    const newName = prompt("Enter new name for the deck:", deck.name);
+    if (newName) {
+      const updatedDecks = decks.map((d) =>
+        d.id === deck.id ? { ...d, name: newName } : d
+      );
+      setDecks(updatedDecks);
+      localStorage.setItem("decks", JSON.stringify(updatedDecks));
+    }
+    setShowSettings(false);
+  }
 
   // Render
   return (
@@ -191,6 +254,10 @@ export default function Deckdetail() {
       <SettingsModal
         isOpen={showSettings}
         onClose={setShowSettings}
+        onRsetDue={resetDueDates}
+        onDelete={handleDeleteDeck}
+        onRename={handleRename}
+        onEditDetails={handleEditDetails}
         /* rename, edit, delete handlers */
       />
       <SharePopup
@@ -212,8 +279,8 @@ function ActionButton({
 }) {
   const variants = {
     default: "text-gray-600 hover:text-gray-800 hover:bg-gray-100",
-    primary: "bg-emerald-500 hover:bg-emerald-600 text-white",
-    quiz: "bg-indigo-500 hover:bg-indigo-600 text-white",
+    primary: "bg-emerald-500 hover:bg-emerald-600 animated-gradient text-white",
+    quiz: "bg-gradient-to-r from-violet-700 to-violet-500 hover:from-indigo-900 hover:to-indigo-700 text-white",
   };
   return (
     <button
@@ -247,5 +314,101 @@ function TabButton({ label, icon: Icon, active, onClick }) {
       <Icon className="w-5 h-5" />
       <span className="text-2xl font-semibold">{label}</span>
     </button>
+  );
+}
+
+const SharePopup = ({
+  showSharePopup,
+  setShowSharePopup,
+  copyLink,
+  shareLink,
+}) => {
+  return (
+    <>
+      {showSharePopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm ">
+          <div className="bg-white p-6 rounded-xl shadow-xl text-black space-y-4 max-w-sm w-full ">
+            <h2 className="text-xl font-bold">Share this Deck</h2>
+            <p>Send this link to friends or colleagues:</p>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                className="form-checkbox h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="text-gray-700 text-sm ml-1">
+                Include PDF file
+              </span>
+            </div>
+            <div className="flex items-center justify-between border rounded px-2 py-1">
+              <span className="text-sm text-gray-800 truncate">
+                {shareLink}
+              </span>
+              <button
+                onClick={copyLink}
+                className="ml-2 px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              onClick={() => setShowSharePopup(false)}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+function SettingsModal({
+  isOpen,
+  onClose,
+  onRename,
+  onEditDetails,
+  onRsetDue,
+  onDelete,
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl text-black space-y-4 max-w-sm w-full">
+        <h2 className="text-xl font-bold">Deck Settings</h2>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={onRename}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Rename Deck
+          </button>
+          <button
+            onClick={onEditDetails}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Edit Deck Details
+          </button>
+          <button
+            onClick={onDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Delete Deck
+          </button>
+          <button
+            onClick={onRsetDue}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Reset Due Dates
+          </button>
+        </div>
+        <button
+          onClick={() => onClose(false)}
+          className="mt-4 w-full bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }

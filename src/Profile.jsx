@@ -1,4 +1,4 @@
-import { useState,useRef,useEffect } from "react";
+import { useState,useRef } from "react";
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -11,6 +11,7 @@ import {
 
 import { Award, BadgePlus, BadgeCheck, Flame, Clock } from 'lucide-react';
 import profile from './assets/profile.png';
+import { useDecks } from "./lib/DeckContext";
 
 ChartJS.register(
   RadialLinearScale,
@@ -29,21 +30,14 @@ const learningStats = [
   { label: 'Streak Days', value: '7', bg: 'bg-orange-50', text: 'orange-600' }
 ];
 
-const learningStylesRaw = [
-  { color: "bg-red-500", label: "Visual", value: 100 },
-  { color: "bg-blue-500", label: "Verbal", value: 300},
-  { color: "bg-yellow-500", label: "Logical", value:100 },
-  { color: "bg-green-500", label: "RealWorld", value: 110 },
-];
 
 const ProfilePage = () => {
+  const { learningPrefs, userXP, level, progress } = useDecks();
   // User and ranking data
   const [user] = useState({
     name: "NSC2025",
     username: "@NSC2025",
-    level: 12,
     streak: 7,
-    progress: 76,
   });
   
 
@@ -52,15 +46,24 @@ const ProfilePage = () => {
   const barRef = useRef(null);
 
   // Normalize to make total 100%
-  const total = learningStylesRaw.reduce((acc, s) => acc + s.value, 0);
-  const learningStyles = learningStylesRaw.map((s) => ({
-    ...s,
-    normalizedValue: (s.value / total) * 100,
-  }));
+  // Derive the bar segments from your 4-vector in context
+  const total = Object.values(learningPrefs).reduce((a, v) => a + v, 0);
+  const meta = {
+    visual:    { color: "bg-red-500",    label: "Visual"    },
+    verbal:    { color: "bg-blue-500",   label: "Verbal"    },
+    logical:   { color: "bg-yellow-500", label: "Logical"   },
+    realworld: { color: "bg-green-500",  label: "RealWorld" },
+  };
+  const learningStyles = Object.entries(learningPrefs).map(
+    ([key, value]) => ({
+      color:           meta[key].color,
+      label:           meta[key].label,
+      normalizedValue: (value / total) * 100,
+    })
+  );
 
   return (
     <div>
-      {/* Bar */}
       <div
         ref={barRef}
         className="flex w-full h-8 rounded-full overflow-hidden bg-gray-200 relative"
@@ -149,7 +152,7 @@ const ProfilePage = () => {
             <BadgeCheck size={24} className="text-yellow-500" />
           </div>
           <div className="flex items-center space-x-4 mt-2">
-            <span className="text-gray-600">Level {user.level}</span>
+            <span className="text-gray-600">Level {level}</span>
             <div className="flex items-center text-gray-600">
               <Flame size={20} className="text-red-500 mr-1" />
               Streak: {user.streak} days
@@ -158,15 +161,13 @@ const ProfilePage = () => {
         </div>
         <div className="w-1/4">
           <div className="bg-gray-200 h-2 rounded-full overflow-hidden">
-            <div className="bg-indigo-600 h-2" style={{ width: `${user.progress}%` }} />
+            <div className="bg-indigo-600 h-2" style={{ width: `${progress}%` }} />
           </div>
-          <p className="text-right text-gray-600 mt-1">{user.progress}% Complete</p>
+          <p className="text-right text-gray-600 mt-1">{progress}% Complete</p>
         </div>
       </div>
 
-      {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 ">
-          {/* activity */}
           <div className="bg-white text-gray-900 rounded-lg p-6 shadow">
             <h3 h3 className="text-2xl font-semibold mb-4">Learning Dashboard</h3>
             <LearningStats/>
