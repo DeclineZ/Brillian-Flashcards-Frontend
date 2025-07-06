@@ -382,24 +382,18 @@ function SettingsModal({
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Rename Deck
-          </button>
+          </button>    
           <button
-            onClick={onEditDetails}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={onRsetDue}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Edit Deck Details
+            Reset Due Dates
           </button>
           <button
             onClick={onDelete}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Delete Deck
-          </button>
-          <button
-            onClick={onRsetDue}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Reset Due Dates
           </button>
         </div>
         <button
