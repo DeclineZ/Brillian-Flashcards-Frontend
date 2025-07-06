@@ -50,6 +50,11 @@ export default function SmartQuizView() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="text-left">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Smart Quiz</h2>
+        <p className="text-gray-600">{smartDeck.description}</p>
+      </div>
 
       {/* Quiz Cards */}
       <div className="space-y-4">
@@ -62,6 +67,8 @@ export default function SmartQuizView() {
         ))}
       </div>
 
+      {/* Add Quiz Button */}
+      <AddQuizButton onClick={() => navigate(`/deck/${deck.id}/cards/new`)} />
 
       {/* Empty State */}
       {smartDeck.cards.length === 0 && (
@@ -106,7 +113,7 @@ function QuizCard({ quiz, onRetry }) {
   return (
     <div className=" bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
       {/* Header */}
-      <div onClick={() => quiz.answer&&setIsExpanded(!isExpanded)}  className="cursor-pointer  bg-white border-b border-blue-100 p-3">
+      <div onClick={() => setIsExpanded(!isExpanded)} className="cursor-pointer  bg-white border-b border-blue-100 p-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-4">
@@ -122,19 +129,18 @@ function QuizCard({ quiz, onRetry }) {
             </p>
           </div>
           <div className="flex items-center space-x-2 ml-4">
-            {!isExpanded &&(<button
+            <button
               onClick={onRetry}
               className="p-3 text-gray-400  hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-colors"
             >
               <RotateCcw className="w-5 h-5 text-blue-500" />
-            </button>)}
-            {quiz.answer&&(<button
+            </button>
+            <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`p-3 text-gray-400 "hover:text-blue-500 hover:bg-blue-50 transition-colors rounded-xl`}
-              
+              className="p-3 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-colors"
             >
               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>)}
+            </button>
           </div>
         </div>
       </div>
@@ -193,8 +199,8 @@ function QuizCard({ quiz, onRetry }) {
           <div className="flex items-center justify-end space-x-4 pt-4 border-t border-gray-100">
             <Clock className="w-4 h-4 text-gray-400" />
             <span className="text-sm text-gray-500">Time taken: {formatTime(quiz.time)}</span>
-            <button onClick={onRetry} className="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl flex items-center space-x-1">
-              <RotateCcw className="w-4 h-4 text-blue-500" />
+            <button onClick={onRetry} className="px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded-xl flex items-center space-x-1">
+              <RotateCcw className="w-4 h-4 text-green-500" />
               <span className="text-sm">Try again</span>
             </button>
           </div>
@@ -204,3 +210,22 @@ function QuizCard({ quiz, onRetry }) {
   );
 }
 
+function AddQuizButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-6 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-3 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+    >
+      <Plus className="w-6 h-6" />
+      <span className="text-lg">Add New Quiz Question</span>
+    </button>
+  );
+}
+
+// Utility for formatting time
+function formatTime(seconds) {
+  if (seconds < 60) return `${seconds}s`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+}

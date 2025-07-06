@@ -8,13 +8,12 @@ import { useDecks }            from './lib/DeckContext.jsx';
 const Sidebar            = lazy(() => import('./Sidebar.jsx'));
 const FlashcardDeckTable = lazy(() => import('./FlashcardDeckTable.jsx'));
 const CreateFlashcards    = lazy(() => import('./CreateFlashcards.jsx'));
-const DeckDetail          = lazy(() => import('./DeckDetail.jsx'));
+const DeckDetail =  lazy(() => import('./DeckDetail.jsx'));
 const FlashcardPlayer     = lazy(() => import('./FlashcardPlayer.jsx'));
 const CommunityPage       = lazy(() => import('./CommunityPage.jsx'));
 const LearnerTypePage     = lazy(() => import('./LearnerTypePage.jsx'));
 const Profile             = lazy(() => import('./Profile.jsx'));
 const QuizPlayer          = lazy(() => import('./QuizPlayer.jsx'));
-
 
 
 function App() {

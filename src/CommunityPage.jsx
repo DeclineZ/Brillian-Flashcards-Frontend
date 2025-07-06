@@ -1,5 +1,8 @@
 // src/components/LearnTogether.jsx
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Heart, Flame, ThumbsUp, Trophy } from 'lucide-react'
+import { useDecks } from './lib/DeckContext'
 import profile from './assets/profile.png'
 
 // static ranking data

@@ -112,6 +112,7 @@ const ProfilePage = () => {
     );
   };
 
+  // Badge component
   const Badge = ({ badgeName, progress }) => (
     <div className="flex flex-col items-center gap-2">
       <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full">
@@ -140,6 +141,7 @@ const ProfilePage = () => {
 
   return (
     <div className="w-full max-w-full sm:max-w-full lg:max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-6 space-y-6 overflow-x-auto ">
+      {/* Profile Header */}
       <div className="flex items-center bg-white p-6 rounded-lg shadow">
         <img src={profile} alt="User" className="w-20 h-20 rounded-full object-cover" />
         <div className="ml-6 flex-1">
@@ -172,11 +174,13 @@ const ProfilePage = () => {
           </div>
         
         <div className="col-span-1 flex flex-col "> 
+          {/* Learning Style */}
           <div className="col-span-2 bg-white rounded-lg shadow p-6 flex-1 ">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">My Learning Style</h2>
             <LearningStyleBar/>
           </div>
 
+          {/* Badges */}
           <div className="col-span-2 bg-white rounded-lg shadow p-6 flex-1 mt-4 ">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Badges</h2>
             <div className="flex-1  overflow-auto">
