@@ -7,6 +7,10 @@ import {
 import { X } from 'lucide-react';
 
 export default function StatsPopup({ deckId, onClose, onReset }) {
+
+  
+  
+
   const { decks } = useDecks();
   const deck = decks.find((d) => d.id === deckId);
   if (!deck) return null;
@@ -23,6 +27,7 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
   const studiedPct = ((learnedCount / (totalCards || 1)) * 100).toFixed(1);
 
   // Quiz Stats from localStorage
+
   const [quizData, setQuizData] = useState([]);
   useEffect(() => {
     if (Array.isArray(deck.quiz)) {
@@ -39,6 +44,7 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
       setQuizData(data);
     }
   }, [deck]);
+  
 
   const totalQuiz = quizData.length;
   const avgQuizScore = (
@@ -53,6 +59,8 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
     { name: 'Learned', value: learnedCount },
     { name: 'Due', value: dueCount }
   ];
+
+  
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6 z-50">
