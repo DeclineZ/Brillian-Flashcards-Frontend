@@ -101,7 +101,7 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
           <div className="pt-4 border-t border-gray-100">
             <button
               onClick={onClose}
-              className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              className="w-full py-3 text-sm font-medium text-white transition-colors duration-200 bg-blue-600 hover:bg-blue-700"
             >
               Close
             </button>
