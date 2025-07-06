@@ -81,7 +81,7 @@ export default function FlashcardView() {
   });
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-5 p-2">
       <button
         onClick={handleAddCard}
         className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-6 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-3 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
@@ -90,7 +90,7 @@ export default function FlashcardView() {
         <span className="text-lg">Add New Quiz Question</span>
       </button>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {sortedCards.length > 0 ? (
           sortedCards.map((card, idx) => (
             <FlashcardItem
@@ -189,8 +189,8 @@ function FlashcardItem({ card, index, onUpdate, onDelete, onRemove }) {
           : 'bg-gray-100 text-gray-500 border border-gray-300 opacity-80'
       }`}
     >
-     <div className="p-4 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-3">
+     <div className="px-3 py-2 flex flex-col h-full">
+        <div className="flex justify-between items-center ">
           <div className="flex items-center space-x-2">
             <span className="inline-flex w-8 h-8 items-center justify-center bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
               {index}
@@ -220,7 +220,7 @@ function FlashcardItem({ card, index, onUpdate, onDelete, onRemove }) {
           </div>
         </div>
 
-        <div className="flex-1 flex space-x-4 mb-3">
+        <div className="flex-1 flex space-x-4 ">
           {(editedImageURL || isEditing) && (
             <div className="w-24 h-24 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center">
               {!isEditing && editedImageURL ? (
