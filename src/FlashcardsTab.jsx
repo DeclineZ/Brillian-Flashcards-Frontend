@@ -226,10 +226,11 @@ function FlashcardItem({ card, index, onUpdate, onDelete, onRemove }) {
               {!isEditing && editedImageURL ? (
                 <img src={editedImageURL} alt="Flashcard" className="w-full h-full object-cover" />
               ) : (
-                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-gray-500">
+                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer text-gray-500 bg-gray-100">
                   <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   {editedImageURL ? (
                     <img src={editedImageURL} alt="Preview" className="w-full h-full object-cover" />
+
                   ) : (
                     <span className="text-sm">Upload</span>
                   )}

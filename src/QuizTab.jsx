@@ -117,7 +117,7 @@ function QuizCard({ quiz, onRetry }) {
                 {getPerformanceIcon(quiz.percent)} {quiz.percent}%
               </span>
             </div>
-            <p className="text-gray-900 font-medium text-lg leading-relaxed">
+            <p className="text-gray-900 font-medium leading-relaxed">
               {quiz.question}
             </p>
           </div>
@@ -159,8 +159,8 @@ function QuizCard({ quiz, onRetry }) {
                 <Check className="w-5 h-5 text-green-600" />
                 <h4 className="font-semibold text-gray-900">What you did well</h4>
               </div>
-              <ul className="space-y-2 ml-7">
-                {quiz.positive.map((pt, i) => <li key={i} className="text-gray-700">• {pt}</li>)}
+              <ul className="space-y-2 ml-7 ">
+                {quiz.positive.map((pt, i) => <li key={i} className="text-green-700">• {pt}</li>)}
               </ul>
             </div>
           )}
