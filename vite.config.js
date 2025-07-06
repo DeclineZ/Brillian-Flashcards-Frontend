@@ -11,25 +11,5 @@ export default defineConfig({
     proxy: {
       '/api' : 'http://localhost:5000'
     }
-  },
-  optimizeDeps: {
-    exclude: [
-      'cose-base',
-      'chevrotain',
-      '@chevrotain/regexp-to-ast',
-      'chevrotain-allstar',
-      'd3-delaunay'
-    ]
-  },
-  build: {
-    rollupOptions: {
-      external: [
-        'cose-base',
-        'chevrotain',
-        '@chevrotain/regexp-to-ast',
-        'chevrotain-allstar',
-        'd3-delaunay'
-      ]
-    }
   }
 })
