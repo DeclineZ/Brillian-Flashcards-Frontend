@@ -19,6 +19,7 @@ export async function withTimeout(promise, timeoutMs, fallback) {
     const result = await Promise.race([promise, timeout]);
     return result;
   } catch (e) {
+    alert("repalce with mockup data\nError :"+e)
     return { data: fallback };
   } finally {
     clearTimeout(timer);
