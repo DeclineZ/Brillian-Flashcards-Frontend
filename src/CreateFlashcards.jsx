@@ -273,7 +273,7 @@ export default function CreateFlashcards() {
             navigate(`/deck/${newDeck.id}`);
         } catch (err) {
             console.error(err);
-            alert("Generation failed");
+            alert('Error: File too big. Please upload a smaller PDF.');
         } finally {
             setLoading(false);
         }
