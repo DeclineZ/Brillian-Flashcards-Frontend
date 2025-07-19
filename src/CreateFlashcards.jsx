@@ -33,7 +33,10 @@ function ModeButton({ children, icon, active, onClick, ...rest }) {
 }
 
 export default function CreateFlashcards() {
-    const BASE = import.meta.env.VITE_API_URL;
+    const isCapacitor = window?.Capacitor?.isNativePlatform();
+const BASE = isCapacitor
+  ? 'https://brillian-flashcard-backend.onrender.com' // Replace with your dev machine IP address accessible to your device/emulator
+  : import.meta.env.VITE_API_URL;
 
     const navigate = useNavigate();
     const { setDecks, learningPrefs } = useDecks();

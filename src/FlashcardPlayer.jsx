@@ -34,7 +34,10 @@ export default function FlashcardPlayer() {
   const [cardStartTime, setCardStartTime] = useState(0);
   const [cardElapsedTime, setCardElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const BASE = import.meta.env.VITE_API_URL;
+  const isCapacitor = window?.Capacitor?.isNativePlatform();
+const BASE = isCapacitor
+  ? 'https://brillian-flashcard-backend.onrender.com' // Replace with your dev machine IP address accessible to your device/emulator
+  : import.meta.env.VITE_API_URL;
 
 
   const deck = decks.find(d => String(d.id) === id);

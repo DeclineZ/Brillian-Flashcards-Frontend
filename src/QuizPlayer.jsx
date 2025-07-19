@@ -23,7 +23,10 @@ export default function QuizPlayer() {
   const { userXP, setUserXP }             = useDecks();
 
   const feedbackRef = useRef(null);
-  const BASE = import.meta.env.VITE_API_URL;
+  const isCapacitor = window?.Capacitor?.isNativePlatform();
+  const BASE = isCapacitor
+    ? 'https://brillian-flashcard-backend.onrender.com' // Replace with your dev machine IP
+    : import.meta.env.VITE_API_URL;
 
   
 
@@ -240,3 +243,4 @@ if (!prevBest || record.percent > (prevBest.percent ?? 0)) {
     </div>
   );
 }
+
