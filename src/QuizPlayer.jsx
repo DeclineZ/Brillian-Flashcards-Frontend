@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDecks } from './lib/DeckContext';
 import { ArrowLeft, CheckCircle2, Clock, ArrowRight } from 'lucide-react';
+import './mobileLandscape.css'
 
 export default function QuizPlayer() {
   const { id, idx } = useParams();
@@ -133,7 +134,7 @@ if (!prevBest || record.percent > (prevBest.percent ?? 0)) {
 
   return (
     <div
-      className="flex flex-col items-center w-full min-h-screen bg-gray-50"
+      className="smartquiz-container flex flex-col items-center w-full min-h-screen bg-gray-50"
     >
       <header className="flex justify-between items-center w-full max-w-6xl px-4 py-6">
    <button

@@ -14,6 +14,8 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useDecks } from "./lib/DeckContext.jsx";
 import { withTimeout } from "./lib/aiTimeout.js";
+import "./mobileLandscape.css";
+
 
 function ModeButton({ children, icon, active, onClick, ...rest }) {
     return (
@@ -418,7 +420,7 @@ const BASE = isCapacitor
     }
 
     return (
-        <div className="p-8 space-y-6 bg-gray-50 min-h-full w-full">
+        <div className="p-8 space-y-6 bg-gray-50 min-h-full w-full create-flashcards-container">
             <h1 className="text-3xl font-bold text-black">
                 Create Study Decks
             </h1>

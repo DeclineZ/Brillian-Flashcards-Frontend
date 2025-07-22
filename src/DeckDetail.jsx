@@ -24,6 +24,7 @@ import FlashcardView from "./FlashcardsTab";
 // import SettingsModal from "./showSettings";
 // import SharePopup from "./SharePopup";
 import SmartQuizView from "./QuizTab";
+import "./mobileLandscape.css";
 
 // Custom Play icon
 const PlayIcon = ({ size = 24, color = "#ffffff" }) => {
@@ -179,7 +180,7 @@ export default function DeckDetail() {
 
   // Render
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col overflow-hidden">
+    <div className="deckdetail-container w-full h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col overflow-hidden">
       {/* Header with Play, Stats, Share, Settings */}
       <header className="w-full bg-white/95 backdrop-blur-sm shadow-lg shadow-blue-100  border-b border-gray-200 z-50">
         <div className="px-4 lg:px-8">

@@ -7,6 +7,8 @@ import { useDecks } from './lib/DeckContext.jsx';
 import confetti from 'canvas-confetti';
 import { withTimeout } from './lib/aiTimeout.js';
 import { calculateNext } from './lib/sm2.js';
+import "./mobileLandscape.css";
+
 
 export default function FlashcardPlayer() {
   const { decks, setDecks } = useDecks();
@@ -402,7 +404,7 @@ useEffect(() => {
   
   return (
     
-    <div className="flex flex-col items-center min-h-screen bg-gray-50 w-full relative">
+<div className="flashcardplayer-container flex flex-col items-center min-h-screen bg-gray-50 w-full relative">
       
       {isFinished && (
   <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
