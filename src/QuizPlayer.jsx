@@ -193,8 +193,8 @@ export default function QuizPlayer() {
             <button
               onClick={next}
               disabled={qIndex + 1 >= totalQs}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-yellow-200 text-yellow-800
-                       hover:bg-yellow-100 disabled:opacity-40"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-blue-150 text-blue-800
+                       hover:bg-blue-200 disabled:opacity-40"
             >
               Next <ArrowRight size={18} />
             </button>
