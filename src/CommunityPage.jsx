@@ -23,7 +23,7 @@ const Ranking = () => {
   let display = sorted.slice(0, 4)
 
   if (youIndex >= 4) {
-    display[3] = you // replace 4th person with You
+    display[3] = you
   }
 
 
@@ -62,12 +62,12 @@ const Ranking = () => {
 // categories and topics sample
 const categories = ['All', 'Science', 'Math', 'History', 'Art']
 const topics = {
-  "สมุดคำศัพท์ ครูพี่อชิ": { card: 117, image: '/community/4.png', author: "ครูพี่อชิ"},
-  "THAI เนื้อเน้นๆ": { card: 170, image: "/community/2.png", author: "PaSit"},
-  "สังคม ; เศรษฐศาสตร์ ม.5": { card: 36, image: "/community/8.png", author: "Snowwyprae"},
-  "ความหลากหลายทางชีวภาพ": { card: 28, image: "/community/5.png", author: "cholyzm"},
-  "ประวัติฯยุคกลาง-ปัจจุบัน​": { card: 65, image: "/community/6.png", author: "SoulfulSmile"},
-  "Idioms ที่ออกสอบบ่อย": { card: 46, image: "/community/7.png", author: "สอบติด#dek59"}
+  "สมุดคำศัพท์ ครูพี่อชิ": { card: 117, image: '/community/4.png', author: "ครูพี่อชิ" },
+  "THAI เนื้อเน้นๆ": { card: 170, image: "/community/2.png", author: "PaSit" },
+  "สังคม ; เศรษฐศาสตร์ ม.5": { card: 36, image: "/community/8.png", author: "Snowwyprae" },
+  "ความหลากหลายทางชีวภาพ": { card: 28, image: "/community/5.png", author: "cholyzm" },
+  "ประวัติฯยุคกลาง-ปัจจุบัน​": { card: 65, image: "/community/6.png", author: "SoulfulSmile" },
+  "Idioms ที่ออกสอบบ่อย": { card: 46, image: "/community/7.png", author: "สอบติด#dek59" }
 };
 
 export default function LearnTogether() {
