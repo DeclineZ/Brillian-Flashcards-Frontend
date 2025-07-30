@@ -5,11 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(),
-    tailwindcss(),
+  tailwindcss(),
   ],
   server: {
     proxy: {
-      '/api' : 'https://brillian-flashcard-backend.onrender.com'
+      '/api': 'https://brillian-flashcard-backend-production.up.railway.app'
     }
   }
 })

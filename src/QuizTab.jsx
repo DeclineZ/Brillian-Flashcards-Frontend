@@ -12,6 +12,7 @@ import {
   Lightbulb,
   Clock
 } from "lucide-react";
+import './mobileLandscape.css'
 
 export default function SmartQuizView() {
   const { id } = useParams();

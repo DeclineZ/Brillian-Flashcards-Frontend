@@ -2,6 +2,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDecks } from './lib/DeckContext'
+import './mobileLandscape.css'
 
 export default function FlashcardDeckTable() {
   const navigate = useNavigate()
@@ -31,7 +32,7 @@ export default function FlashcardDeckTable() {
   }
 
   return (
-    <div className="w-full mx-auto p-6 overflow-y-auto">
+    <div className="flashcarddecktable-container w-full mx-auto p-6 overflow-y-auto">
       <h1 className="text-3xl font-bold mb-4 text-black">Study Decks</h1>
 
       <div

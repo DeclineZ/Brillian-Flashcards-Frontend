@@ -14,15 +14,16 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { useDecks } from "./lib/DeckContext.jsx";
 import { withTimeout } from "./lib/aiTimeout.js";
+import "./mobileLandscape.css";
+
 
 function ModeButton({ children, icon, active, onClick, ...rest }) {
     return (
         <button
-            className={`px-4 py-1 rounded-full flex items-center gap-2 text-sm ${
-                active
+            className={`px-4 py-1 rounded-full flex items-center gap-2 text-sm ${active
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-            }`}
+                }`}
             onClick={onClick}
             {...rest}
         >
@@ -34,9 +35,9 @@ function ModeButton({ children, icon, active, onClick, ...rest }) {
 
 export default function CreateFlashcards() {
     const isCapacitor = window?.Capacitor?.isNativePlatform();
-const BASE = isCapacitor
-  ? 'https://brillian-flashcard-backend.onrender.com' // Replace with your dev machine IP address accessible to your device/emulator
-  : import.meta.env.VITE_API_URL;
+    const BASE = isCapacitor
+        ? 'https://brillian-flashcard-backend-production.up.railway.app' // Replace with your dev machine IP address accessible to your device/emulator
+        : import.meta.env.VITE_API_URL;
 
     const navigate = useNavigate();
     const { setDecks, learningPrefs } = useDecks();
@@ -348,29 +349,29 @@ const BASE = isCapacitor
 
         const transformedCards = cardsOk
             ? cards.map((c) => {
-                  const hasImg = !!c.image;
-                  return {
-                      id: uuid(),
-                      question: c.question.trim(),
-                      answer: c.answer.trim(),
-                      keyword: c.keyword,
-                      needs_image: hasImg,
-                      image: hasImg ? c.image : "",
-                      taxonomy: c.taxonomy || "Manual",
-                      repetition: 0,
-                      interval: 0,
-                      efactor: 2.5,
-                      nextReview: Date.now(),
-                  };
-              })
+                const hasImg = !!c.image;
+                return {
+                    id: uuid(),
+                    question: c.question.trim(),
+                    answer: c.answer.trim(),
+                    keyword: c.keyword,
+                    needs_image: hasImg,
+                    image: hasImg ? c.image : "",
+                    taxonomy: c.taxonomy || "Manual",
+                    repetition: 0,
+                    interval: 0,
+                    efactor: 2.5,
+                    nextReview: Date.now(),
+                };
+            })
             : [];
 
         const transformedQuiz = quizOk
             ? quizzes.map((q) => ({
-                  question: q.question.trim(),
-                  answer: q.answer.trim(),
-                  key_points: q.key_points?.length ? q.key_points : [],
-              }))
+                question: q.question.trim(),
+                answer: q.answer.trim(),
+                key_points: q.key_points?.length ? q.key_points : [],
+            }))
             : [];
 
         const emojis = [
@@ -418,7 +419,7 @@ const BASE = isCapacitor
     }
 
     return (
-        <div className="p-8 space-y-6 bg-gray-50 min-h-full w-full">
+        <div className="p-8 space-y-6 bg-gray-50 min-h-full w-full create-flashcards-container">
             <h1 className="text-3xl font-bold text-black">
                 Create Study Decks
             </h1>
@@ -517,18 +518,17 @@ const BASE = isCapacitor
                                 onClick={() => setActiveTab(t)}
                                 className={`
             pb-2
-            ${
-                activeTab === t
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
-            }
+            ${activeTab === t
+                                        ? "border-b-2 border-blue-600 text-blue-600"
+                                        : "text-gray-500 hover:text-gray-700"
+                                    }
           `}
                             >
                                 {t === "summary"
                                     ? "Summary"
                                     : t === "cards"
-                                    ? "Flashcards"
-                                    : "Quiz"}
+                                        ? "Flashcards"
+                                        : "Quiz"}
                             </button>
                         ))}
                     </nav>

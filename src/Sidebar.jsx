@@ -6,6 +6,7 @@ import { useDecks } from './lib/DeckContext.jsx';
 import logo from './assets/logo.png';
 import profile from './assets/profile.png';
 import { useLocation } from 'react-router-dom';
+import './mobileLandscape.css'
 
 export default function Sidebar() {
   const { decks, userXP, level, progress } = useDecks(); 
@@ -25,14 +26,14 @@ export default function Sidebar() {
 
   return (
     <aside
-     className={`${sidebarWidth} static inset-y-0 left-0 transition-all duration-300 flex flex-col bg-white border-r border-gray-200 h-screen`}
+     className={`${sidebarWidth} static inset-y-0 left-0 sidebar transition-all duration-300 flex flex-col bg-white border-r border-gray-200 h-screen`}
    >
       {/* Header */}
       <div className={`${collapsed ? 'flex flex-col items-center gap-2 py-4 border-b' : 'flex items-center justify-between px-4 py-4 border-b'}`}>
         <div className={`flex items-center ${collapsed ? 'flex-col gap-2' : 'gap-2'}`}>
           {collapsed && (
             <button onClick={() => {setCollapsed(false)
-            }} className="text-black">
+            }} className="text-black ">
               <ChevronRight size={20} />
             </button>
           )}

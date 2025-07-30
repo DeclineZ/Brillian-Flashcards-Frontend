@@ -5,6 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend
 } from 'recharts';
 import { X } from 'lucide-react';
+import './mobileLandscape.css'
 
 export default function StatsPopup({ deckId, onClose, onReset }) {
 
@@ -63,7 +64,7 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
   
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+    <div className="statspopup-container fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6 z-50">
       <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full overflow-hidden border border-gray-100">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -165,3 +166,4 @@ export default function StatsPopup({ deckId, onClose, onReset }) {
     </div>
   );
 }
+
