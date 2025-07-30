@@ -2,12 +2,19 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Lightbulb, ChevronLeft, X, Heart, ThumbsUp, Clock } from 'lucide-react';
 import { useDecks } from './lib/DeckContext.jsx';
 import confetti from 'canvas-confetti';
 import { withTimeout } from './lib/aiTimeout.js';
 import { calculateNext } from './lib/sm2.js';
 import "./mobileLandscape.css";
+
+import FlashcardCard from './components/FlashcardPlayer/FlashcardCard.jsx';
+import FlashcardControls from './components/FlashcardPlayer/FlashcardControls.jsx';
+import HeaderBar from './components/FlashcardPlayer/HeaderBar.jsx';
+import XPMessage from './components/FlashcardPlayer/XPMessage.jsx';
+import FinishedModal from './components/FlashcardPlayer/FinishedModal.jsx';
+import AIExplanationDrawer from './components/FlashcardPlayer/AIExplanationDrawer.jsx';
+import AddMoreCardsModal from './components/FlashcardPlayer/AddMoreCardsModal.jsx';
 
 
 export default function FlashcardPlayer() {
@@ -201,20 +208,6 @@ export default function FlashcardPlayer() {
   }
 
 
-  const getTaxonomyColorClass = (taxonomy) => {
-    switch (taxonomy) {
-      case "Remembering":
-        return "text-blue-500";
-      case "Understanding":
-        return "text-green-500";
-      case "Applying":
-        return "text-yellow-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-
-
   function handleShowAnswer() {
     setShowAnswer(true);
     if (isTimerRunning) {
@@ -274,10 +267,6 @@ export default function FlashcardPlayer() {
     } finally {
       setLoadingAi(false);
     }
-  }
-
-  function handleExit() {
-    navigate(`/deck/${deck.id}`);
   }
 
   function handleNext() {
@@ -392,7 +381,16 @@ export default function FlashcardPlayer() {
 
   function confirmAdd() {
     if (checked.length === 0) return setMoreOpen(false);
-    const selected = moreCards.filter((c) => checked.includes(c.id));
+    const defaultSrs = {
+      point: 0,
+      repetition: 0,
+      interval: 1,
+      efactor: 2.5,
+      nextReview: Date.now(),
+    };
+    const selected = moreCards
+      .filter((c) => checked.includes(c.id))
+      .map(c => ({ ...defaultSrs, ...c }));
     setDecks((prev) =>
       prev.map((d) =>
         d.id === deck.id ? { ...d, cards: [...d.cards, ...selected], total: d.cards.length + selected.length } : d,
@@ -406,181 +404,31 @@ export default function FlashcardPlayer() {
   return (
 
     <div className="flashcardplayer-container flex flex-col items-center min-h-screen bg-gray-50 w-full relative">
-
-      {isFinished && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="rounded-xl bg-white p-8 shadow-xl text-center space-y-4">
-            <h2 className="text-2xl font-bold text-black">🎉 Great job!</h2>
-            <p className="text-gray-600">You've reviewed every card due today!</p>
-            <p className="text-gray-600">Check back tomorrow for the next, perfectly-timed round.</p>
-            <button
-              onClick={() => navigate(`/deck/${deck.id}`)}
-              className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
-            >
-              Back to decks
-            </button>
-          </div>
-        </div>
-      )}
-      {/* top bar */}
-      <header className="flex justify-between items-center w-full max-w-6xl px-4 py-6">
-        <button
-          onClick={handleExit}
-          className="flex items-center gap-2 text-blue-600"
-        >
-          <ArrowLeft size={20} color="blue" />
-          Exit
-        </button>
-        <span className="text-sm text-gray-700 ">
-          {cardsLeft} Cards left today| Elapsed Time: {sessionTime} sec
-        </span>
-      </header>
-
-      {/* card + controls */}
+      <FinishedModal isFinished={isFinished} onReturn={() => navigate(`/deck/${deck.id}`)} />
+      <HeaderBar cardsLeft={cardsLeft} sessionTime={sessionTime} handleExit={() => navigate(`/deck/${deck.id}`)} />
       <section className="flex flex-col items-center gap-8 flex-1 w-full px-4 pb-6 justify-center">
-        {showXpMessage && (
-          <div className="xp-message">
-            {xpMessage}
-          </div>
-        )}
-
+        <XPMessage message={xpMessage} show={showXpMessage} />
         {showStyleMessage && <div className="style-message">{styleMessage}</div>}
-
         <span className="text-xl text-gray-700 flex justify-center gap-2 font-bold">
-          <Clock size={26} />
+          {/* Timer logic */}
           {isTimerRunning ? ((Date.now() - cardStartTime) / 1000).toFixed(2) : cardElapsedTime} sec
         </span>
-        {/* Larger flipping card */}
-        <div className="perspective card w-full" onClick={handleShowAnswer}>
-          <div
-            className={`card-3d ${showAnswer ? 'rotate-x-180' : ''} w-full h-full`}
-          >
-            {/* front (question) */}
-
-            <div className="card-face flex items-center justify-center bg-white rounded shadow p-6 border border-gray-200 front">
-              <p className="absolute top-4 left-4 text-6xl font-bold text-gray-300">Q</p>
-              <div className={`absolute top-6 text-sm font-medium ${getTaxonomyColorClass(card.taxonomy)}`}>
-                <strong>({card.taxonomy})</strong>
-              </div>
-              <p className="text-center text-xl font-semibold text-black">
-                {card.question}
-              </p>
-            </div>
-            {/* back (answer) */}
-            <div className="card-face rotate-y-180 flex items-center justify-center bg-white rounded shadow p-6 border border-gray-200 back">
-              <p className="absolute top-4 left-4 text-6xl font-bold text-gray-300">A</p>
-              <div className={`absolute top-6 text-sm font-medium ${getTaxonomyColorClass(card.taxonomy)}`}>
-                <strong>({card.taxonomy})</strong>
-              </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleLike(card.id); }}
-                className="absolute top-3 right-3 rounded-full p-1 transition hover:bg-gray-100"
-              >
-                <ThumbsUp
-                  size={20}
-                  className={liked.has(card.id) ? 'text-blue-500 fill-blue-500' : 'text-gray-400'}
-                />
-              </button>
-              <div className="flex flex-col items-center gap-1 h-full w-full justify-center">
-                {card.image && card.needs_image && (
-                  <div className="h-50 w-80 overflow-hidden rounded-lg sm:h-50 sm:w-70 overflow-hidden mb-4"><img
-                    src={card.image}
-                    alt={card.keyword || 'illustration'}
-                    className="mt-4 object-contain"
-                  /></div>
-                )}
-                <p className="text-center text-xl font-semibold mb-4 text-black">
-                  {card.answer}
-                </p>
-
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* buttons */}
-        {!showAnswer ? (
-          <button
-            onClick={handleShowAnswer}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Show Answer
-          </button>
-        ) : (
-          <div className="flex flex-wrap justify-between tabby">
-            <div className="flex flex-wrap justify-center gap-2">
-              <button
-                onClick={() => rate(true)}
-                className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Remembered
-              </button>
-              <button
-                onClick={() => rate(false)}
-                className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Try Again
-              </button>
-            </div>
-            {/* AI Explanation */}
-            <div className="flex flex-wrap justify-center gap-2">
-              <button
-                onClick={handleAiExplanation}
-                className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-2 ai-x-button button animated-gradient"
-              >
-                <Lightbulb size={20} />
-                AI Explanation
-
-              </button>
-              {/* Add more like this */}
-              <button
-                onClick={openAddMore}
-                className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 add-more-button button"
-              >
-                Add More Like This
-              </button>
-
-              {moreOpen && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                  <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
-                    <div className="flex items-center justify-between border-b px-4 py-3">
-                      <div className='flex flex-col'>
-                        <h3 className="text-lg font-bold text-black">New flashcards</h3>
-                        <p className='text-gray-600'>Cards will be added to the back of the deck</p>
-                      </div>
-                      <button onClick={() => setMoreOpen(false)} className="rounded p-1 hover:bg-gray-100"><X size={18} /></button>
-                    </div>
-
-                    {loadingMore ? (
-                      <div className="flex flex-col items-center gap-3 py-10"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" /><p>Generating…</p></div>
-                    ) : (
-                      <div className="max-h-80 space-y-3 overflow-y-auto p-4">
-                        {moreCards.map((c) => (
-                          <label key={c.id} className="flex cursor-pointer gap-3 rounded border p-3 hover:bg-gray-50">
-                            <input type="checkbox" checked={checked.includes(c.id)} onChange={() => toggleCheck(c.id)} className="mt-1" />
-                            <div>
-                              <p className="font-medium text-black">{c.question}</p>
-                              <p className="text-sm text-gray-600">{c.answer}</p>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex justify-end gap-2 border-t px-4 py-3">
-                      <button onClick={() => setMoreOpen(false)} className="rounded border px-4 py-2 text-gray-700 hover:bg-gray-100">Cancel</button>
-                      <button onClick={confirmAdd} disabled={checked.length === 0} className="rounded bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50">Add to deck</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        )}
-
+        <FlashcardCard
+          card={card}
+          showAnswer={showAnswer}
+          onShowAnswer={handleShowAnswer}
+          liked={liked.has(card?.id)}
+          onLike={toggleLike}
+        />
+        <FlashcardControls
+          showAnswer={showAnswer}
+          onShowAnswer={handleShowAnswer}
+          onRate={rate}
+          onAI={handleAiExplanation}
+          onAddMore={openAddMore}
+          loadingAi={loadingAi}
+        />
       </section>
-
       {/* Loading Overlay for AI Explanation */}
       {loadingAi && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -590,36 +438,23 @@ export default function FlashcardPlayer() {
           </div>
         </div>
       )}
-
-      <aside
-        className={`fixed inset-y-0 right-0 w-80 md:w-96 bg-white border-l shadow-lg
-              transform transition-transform duration-300
-              ${drawer ? 'translate-x-0' : 'translate-x-full'}`}
-      >
-        <div className="flex items-center gap-2 px-4 py-3 border-b">
-          <button
-            onClick={() => setDrawer(false)}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <ChevronLeft size={20} color="black" />
-          </button>
-          <h2 className="font-bold text-lg text-black">AI Explanation</h2>
-        </div>
-
-        <div className="p-4 overflow-y-auto text-black space-y-4">
-          <p><span className="font-semibold">Q:</span> {card.question}</p>
-          <p><span className="font-semibold">A:</span> {card.answer}</p>
-          <hr />
-          {loadingAi ? (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent animate-spin rounded-full"></div>
-              <p>Fetching explanation…</p>
-            </div>
-          ) : (
-            <p className="whitespace-pre-wrap leading-relaxed">{aiExplanation}</p>
-          )}
-        </div>
-      </aside>
+      <AIExplanationDrawer
+        open={drawer}
+        question={card?.question}
+        answer={card?.answer}
+        explanation={aiExplanation}
+        loading={loadingAi}
+        onClose={() => setDrawer(false)}
+      />
+      <AddMoreCardsModal
+        open={moreOpen}
+        moreCards={moreCards}
+        checked={checked}
+        loading={loadingMore}
+        onCheck={toggleCheck}
+        onClose={() => setMoreOpen(false)}
+        onConfirm={confirmAdd}
+      />
     </div>
   );
 }
