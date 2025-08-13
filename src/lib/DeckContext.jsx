@@ -1,73 +1,112 @@
 // src/lib/DeckContext.jsx
-import { createContext, useContext, useState, useEffect } from 'react';
-import decksJson from '../data/decks.json';
+import { createContext, useContext, useState, useEffect } from "react";
+import decksJson from "../data/decks.json";
 
 const DeckCtx = createContext();
 
 export const useDecks = () => useContext(DeckCtx);
 
 export function DeckProvider({ children }) {
+    // const [decks, setDecks] = useState(() => {
+    //   const localDecks = localStorage.getItem('decks');
+    //   return localDecks ? JSON.parse(localDecks) : decksJson;
+    // });
+    const [decks, setDecks] = useState(() => {
+        try {
+            const local = localStorage.getItem("decks");
+            if (local) {
+                const parsed = JSON.parse(local) || [];
 
-  const [decks, setDecks] = useState(() => {
-    const localDecks = localStorage.getItem('decks');
-    return localDecks ? JSON.parse(localDecks) : decksJson;
-  });
+                // Build a set of identifiers for existing decks (prefer id, fallback to title)
+                const existingKeys = new Set(
+                    parsed.map((d) => d.id ?? d.title)
+                );
 
-  
+                // Find default decks that are missing locally
+                const defaultsToAdd = (decksJson || []).filter((d) => {
+                    const key = d.id ?? d.title;
+                    return !existingKeys.has(key);
+                });
 
-  const [userXP, setUserXP] = useState(() => {
-    const stored = localStorage.getItem('userXP');
-    return stored ? Number(stored) : 0;
-  });
+                if (defaultsToAdd.length > 0) {
+                    const merged = [...parsed, ...defaultsToAdd];
+                    // persist merged result so defaults "appear" in localStorage
+                    localStorage.setItem("decks", JSON.stringify(merged));
+                    return merged;
+                }
 
-  useEffect(() => {
-    localStorage.setItem('userXP', String(userXP));
-  }, [userXP]);
+                return parsed;
+            } else {
+                // no local storage -> write default file into localStorage so it appears next loads
+                localStorage.setItem("decks", JSON.stringify(decksJson));
+                return decksJson;
+            }
+        } catch (err) {
+            // parsing error -> fallback to defaults and overwrite broken localStorage
+            localStorage.setItem("decks", JSON.stringify(decksJson));
+            return decksJson;
+        }
+    });
 
-  const level     = Math.floor(userXP / 100) + 1;
-  const levelXP   = (level - 1) * 100;
-  const nextLevel = level * 100;
-  const progress  = Math.floor(((userXP - levelXP) / (nextLevel - levelXP)) * 100);
+    const [userXP, setUserXP] = useState(() => {
+        const stored = localStorage.getItem("userXP");
+        return stored ? Number(stored) : 0;
+    });
 
+    useEffect(() => {
+        localStorage.setItem("userXP", String(userXP));
+    }, [userXP]);
 
-  useEffect(() => {
-    localStorage.setItem('decks', JSON.stringify(decks));
-  }, [decks]);
+    const level = Math.floor(userXP / 100) + 1;
+    const levelXP = (level - 1) * 100;
+    const nextLevel = level * 100;
+    const progress = Math.floor(
+        ((userXP - levelXP) / (nextLevel - levelXP)) * 100
+    );
 
-  useEffect(() => {
-   setDecks(ds =>
-     ds.map(deck => ({
-       ...deck,
-       cards: deck.cards.map(card => ({
-         repetition: card.repetition ?? 0,
-         interval:   card.interval   ?? 0,
-         efactor:    card.efactor    ?? 2.5,
-         nextReview: card.nextReview ?? Date.now(),
-         ...card,
-       }))
-     }))
-   );
- }, []); 
+    useEffect(() => {
+        localStorage.setItem("decks", JSON.stringify(decks));
+    }, [decks]);
 
-  const [learningPrefs, setLearningPrefs] = useState(() => {
-    const stored = localStorage.getItem('learningPrefs');
-    return stored
-      ? JSON.parse(stored)
-      : { visual: 0.25, verbal: 0.25, logical: 0.25, realworld: 0.25 };
-  });
-  useEffect(() => {
-    localStorage.setItem('learningPrefs', JSON.stringify(learningPrefs));
-  }, [learningPrefs]);
+    useEffect(() => {
+        setDecks((ds) =>
+            ds.map((deck) => ({
+                ...deck,
+                cards: deck.cards.map((card) => ({
+                    repetition: card.repetition ?? 0,
+                    interval: card.interval ?? 0,
+                    efactor: card.efactor ?? 2.5,
+                    nextReview: card.nextReview ?? Date.now(),
+                    ...card,
+                })),
+            }))
+        );
+    }, []);
 
-  return (
-    <DeckCtx.Provider value={{
-      decks, setDecks,
-      userXP, setUserXP,
-      level, progress,
-      learningPrefs,
-      setLearningPrefs,
-    }}>
-      {children}
-    </DeckCtx.Provider>
-  );
+    const [learningPrefs, setLearningPrefs] = useState(() => {
+        const stored = localStorage.getItem("learningPrefs");
+        return stored
+            ? JSON.parse(stored)
+            : { visual: 0.25, verbal: 0.25, logical: 0.25, realworld: 0.25 };
+    });
+    useEffect(() => {
+        localStorage.setItem("learningPrefs", JSON.stringify(learningPrefs));
+    }, [learningPrefs]);
+
+    return (
+        <DeckCtx.Provider
+            value={{
+                decks,
+                setDecks,
+                userXP,
+                setUserXP,
+                level,
+                progress,
+                learningPrefs,
+                setLearningPrefs,
+            }}
+        >
+            {children}
+        </DeckCtx.Provider>
+    );
 }

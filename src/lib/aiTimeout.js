@@ -1,6 +1,4 @@
 // src/lib/aiTimeout.js
-import axios from 'axios';
-
 /**
  * Wrap any promise (e.g. an axios request) with a hard timeout.
  * If the original promise doesn’t resolve within timeoutMs, we return fallback.
@@ -19,6 +17,7 @@ export async function withTimeout(promise, timeoutMs, fallback) {
     const result = await Promise.race([promise, timeout]);
     return result;
   } catch (e) {
+    alert("Error: File too big. Please upload a smaller PDF. :"+e)
     return { data: fallback };
   } finally {
     clearTimeout(timer);

@@ -1,151 +1,169 @@
-import { useDecks } from './lib/DeckContext'
-
+import { useDecks } from './lib/DeckContext';
+import { useEffect, useState } from 'react';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend
+} from 'recharts';
+import { X } from 'lucide-react';
+import './mobileLandscape.css'
 
 export default function StatsPopup({ deckId, onClose, onReset }) {
+
+  
+  
+
   const { decks } = useDecks();
   const deck = decks.find((d) => d.id === deckId);
   if (!deck) return null;
 
-  // Flashcard Stats
-  const studiedCount = deck.learned;
-  const dueCount = deck.due;
-  const total = studiedCount + dueCount || 1;
-  const studiedPct = (studiedCount / total) * 100;
+  // Flashcard Stats: compute due dynamically from nextReview timestamps
+  const now = Date.now();
+  const totalCards = deck.cards.length;
+  const dueCount = deck.cards.filter((card) => {
+    if (!card.nextReview) return false;
+    const next = new Date(card.nextReview).getTime();
+    return next <= now;
+  }).length;
+  const learnedCount = totalCards - dueCount;
+  const studiedPct = ((learnedCount / (totalCards || 1)) * 100).toFixed(1);
 
-  // Quiz Stats (mock data)
-  const totalQuizCount = 8;
-  const averageQuizScore = 87.5;
+  // Quiz Stats from localStorage
+
+  const [quizData, setQuizData] = useState([]);
+  useEffect(() => {
+    if (Array.isArray(deck.quiz)) {
+      const data = deck.quiz.map((q, idx) => {
+        const raw = localStorage.getItem(`quiz-${deck.id}-${idx}-best`);
+        let percent = 0;
+        try {
+          const parsed = JSON.parse(raw) || {};
+          percent = parsed.percent || 0;
+        } catch {}
+        percent = Math.max(0, Math.min(percent, 100));
+        return { name: `Q${idx + 1}`, percent };
+      });
+      setQuizData(data);
+    }
+  }, [deck]);
+  
+
+  const totalQuiz = quizData.length;
+  const avgQuizScore = (
+    quizData.reduce((sum, q) => sum + q.percent, 0) / (totalQuiz || 1)
+  ).toFixed(1);
+
+    // Colors: blue for learned, violet for due, and violet bars
+  const pieColors = ['#3B82F6', '#443559'];
+  const barColor = '#3B82F6';
+
+  const flashPie = [
+    { name: 'Learned', value: learnedCount },
+    { name: 'Due', value: dueCount }
+  ];
+
+  
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-      <div className="bg-white rounded-3xl shadow-xl max-w-lg w-full overflow-hidden border border-gray-100">
+    <div className="statspopup-container fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+      <div className="bg-white rounded-3xl shadow-xl max-w-2xl w-full overflow-hidden border border-gray-100">
         {/* Header */}
-        <div className="flex items-center justify-between p-8 pb-0">
+        <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-medium text-gray-900">Progress</h2>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Content Grid */}
-        <div className="p-8 pt-6">
-          {/* Progress Overview */}
-          <div className="mb-8">
-            <div className="flex items-end justify-between mb-3">
-              <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                Flashcard Completion
-              </span>
-              <span className="text-lg font-medium text-gray-900">
-                {studiedPct.toFixed(0)}%
-              </span>
+        {/* Summary Stats Boxes */}
+        <div className="p-6 pt-4">
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="p-4 bg-green-100 rounded-xl text-center">
+              <div className="text-2xl font-semibold text-gray-900">{learnedCount}</div>
+              <div className="text-sm text-gray-500 uppercase">Learned</div>
             </div>
-            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${studiedPct}%` }}
-              />
+            <div className="p-4 bg-orange-100 rounded-xl text-center">
+              <div className="text-2xl font-semibold text-gray-900">{dueCount}</div>
+              <div className="text-sm text-gray-500 uppercase">Due</div>
+            </div>
+            <div className="p-4 bg-gray-100 rounded-xl text-center">
+              <div className="text-2xl font-semibold text-gray-900">{totalCards}</div>
+              <div className="text-sm text-gray-500 uppercase">Total</div>
             </div>
           </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            {/* Flashcard Stats */}
-            <div className="space-y-6 p-3">
-              <div>
-                <div className="text-3xl font-medium text-gray-900 mb-1">
-                  {studiedCount}
-                </div>
-                <div className="text-sm text-gray-500 uppercase tracking-wide">
-                  Studied
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-3xl font-medium text-gray-900 mb-1">
-                  {dueCount}
-                </div>
-                <div className="text-sm text-gray-500 uppercase tracking-wide">
-                  Due
-                </div>
-              </div>
-              <div>
-                <div className="text-3xl font-medium text-gray-900 mb-1">
-                  {total}
-                </div>
-                <div className="text-sm text-gray-500 uppercase tracking-wide">
-                  Total
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-2 mb-6 bg-blue-100 rounded-xl">
+            <div className="p-4  text-center">
+              <div className="text-2xl font-semibold text-gray-900">{avgQuizScore}%</div>
+              <div className="text-sm text-gray-500 uppercase">Avg Quiz Score</div>
             </div>
-
-            {/* Quiz Stats */}
-            <div className="space-y-6 p-3 bg-blue-50 rounded-xl">
-              <div>
-                <div className="text-3xl font-medium text-gray-900 mb-1">
-                  {averageQuizScore.toFixed(0)}%
-                </div>
-                <div className="text-sm text-gray-500 uppercase tracking-wide">
-                  Quiz Avg Score
-                </div>
-              </div>
-              
-              <div>
-                <div className="text-3xl font-medium text-gray-900 mb-1">
-                  {totalQuizCount}
-                </div>
-                <div className="text-sm text-gray-500 uppercase tracking-wide">
-                  Quizzes
-                </div>
-              </div>
+            <div className="p-4 text-center">
+              <div className="text-2xl font-semibold text-gray-900">{totalQuiz}</div>
+              <div className="text-sm text-gray-500 uppercase">Quizzes</div>
             </div>
           </div>
+        </div>
 
-          {/* Action Button */}
-          <div className="pt-4 border-t border-gray-100">
+        {/* Detailed Charts: only show if data exists */}
+        <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Flashcard Completion Pie */}
+          {totalCards > 0 && (
+            <div className="flex flex-col items-center">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Completion</h3>
+              <ResponsiveContainer width={240} height={200}>
+                <PieChart>
+                  <Pie
+                    data={flashPie}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={30}
+                    outerRadius={40}
+                    paddingAngle={4}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                  >
+                    {flashPie.map((entry, idx) => (
+                      <Cell key={idx} fill={pieColors[idx]} />
+                    ))}
+                  </Pie>
+                  <Legend verticalAlign="bottom" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Quiz Scores Bar */}
+          {totalQuiz > 0 && (
+            <div className="flex flex-col">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Quiz Scores</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={quizData} margin={{ left: 0, right: 0 }}>
+                  <XAxis dataKey="name" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Bar dataKey="percent" fill={barColor} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end p-6 border-t space-x-4">
+          {onReset && (
             <button
-              onClick={onClose}
-              className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              onClick={onReset}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800"
             >
-              Close
+              Reset Progress
             </button>
-          </div>
+          )}
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function SettingsModal({ isOpen, onClose, onRename, onEditDetails, onDelete }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl text-black space-y-4 max-w-sm w-full">
-            <h2 className="text-xl font-bold">Deck Settings</h2>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={onRename}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Rename Deck
-              </button>
-              <button
-                onClick={onEditDetails}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Edit Deck Details
-              </button>
-              <button
-                onClick={onDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete Deck
-              </button>
-            </div>
-            <button
-              onClick={() => onClose(false)}
-              className="mt-4 w-full bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-  );
-}

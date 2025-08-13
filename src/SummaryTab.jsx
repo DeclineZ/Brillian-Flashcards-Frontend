@@ -22,7 +22,6 @@ export default function SummaryTab() {
   const deck = decks.find((d) => String(d.id) === id);
   const containerRef = useRef(null);
 
-  // ✅ Extract mermaid rendering into its own helper
   const renderMermaidDiagrams = () => {
     const container = containerRef.current;
     if (!container) return;

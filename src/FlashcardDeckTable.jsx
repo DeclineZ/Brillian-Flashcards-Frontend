@@ -2,6 +2,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDecks } from './lib/DeckContext'
+import './mobileLandscape.css'
 
 export default function FlashcardDeckTable() {
   const navigate = useNavigate()
@@ -31,7 +32,7 @@ export default function FlashcardDeckTable() {
   }
 
   return (
-    <div className="w-full mx-auto p-6">
+    <div className="flashcarddecktable-container w-full mx-auto p-6 overflow-y-auto">
       <h1 className="text-3xl font-bold mb-4 text-black">Study Decks</h1>
 
       <div
@@ -46,7 +47,7 @@ export default function FlashcardDeckTable() {
         <div className="text-right">Quizzes</div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {validDecks.length === 0 ? (
           <p className="text-center py-10 text-gray-500">
             No decks available. Click the + icon on the left to get started.
@@ -73,7 +74,7 @@ export default function FlashcardDeckTable() {
             return (
               <div
                 key={id}
-                className="grid items-center gap-x-4 bg-white p-4 rounded-xl shadow hover:shadow-lg transition cursor-pointer"
+                className="grid items-center gap-x-4 bg-white px-4 py-2 rounded-xl shadow hover:shadow-lg transition cursor-pointer"
                 style={gridStyle}
                 onClick={() => navigate(`/deck/${id}`)}
               >
@@ -113,7 +114,7 @@ export default function FlashcardDeckTable() {
 
                 <div className="text-right">
                 <div
-                  className={`inline-flex flex-col items-end px-3 py-2 border rounded text-xs font-medium ${
+                  className={`inline-flex flex-col items-end px-3 py-2 border rounded-lg text-xs font-medium ${
                     avgScore < 60
                       ? 'border-orange-400 text-orange-600'
                       : 'border-green-400 text-green-600'
